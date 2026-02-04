@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#ff6b9d">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>aibo リモコン</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: #333;
+    }
+    
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 20px;
+      padding-bottom: 100px;
+    }
+    
+    header {
+      text-align: center;
+      padding: 20px 0;
+      color: white;
+    }
+    
+    header h1 {
+      margin: 0;
+      font-size: 1.8rem;
+      font-weight: 600;
+    }
+    
+    header p {
+      margin: 8px 0 0;
+      opacity: 0.9;
+      font-size: 0.95rem;
+    }
+    
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+    
+    .card h2 {
+      margin: 0 0 16px;
+      font-size: 1.1rem;
+      color: #555;
+    }
+    
+    .input-group {
+      margin-bottom: 16px;
+    }
+    
+    .input-group label {
+      display: block;
+      font-size: 0.85rem;
+      color: #666;
+      margin-bottom: 6px;
+    }
+    
+    .input-group input {
+      width: 100%;
+      padding: 12px;
+      font-size: 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      transition: border-color 0.2s;
+    }
+    
+    .input-group input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 24px;
+      font-size: 15px;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.1s, opacity 0.2s;
+    }
+    
+    .btn:active {
+      transform: scale(0.96);
+    }
+    
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    
+    .btn-secondary {
+      background: #f0f0f0;
+      color: #333;
+    }
+    
+    .btn-small {
+      padding: 8px 16px;
+      font-size: 13px;
+    }
+    
+    .action-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    
+    .action-btn {
+      background: linear-gradient(135deg, #ff6b9d 0%, #ff8a80 100%);
+      color: white;
+      border: none;
+      border-radius: 14px;
+      padding: 20px 12px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.2s;
+      box-shadow: 0 4px 15px rgba(255,107,157,0.3);
+    }
+    
+    .action-btn:active {
+      transform: scale(0.95);
+    }
+    
+    .action-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .action-btn .emoji {
+      display: block;
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+    
+    .status {
+      text-align: center;
+      padding: 12px;
+      border-radius: 10px;
+      margin-top: 16px;
+      font-size: 14px;
+      display: none;
+    }
+    
+    .status.show {
+      display: block;
+    }
+    
+    .status.success {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+    
+    .status.error {
+      background: #ffebee;
+      color: #c62828;
+    }
+    
+    .status.loading {
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+    
+    .settings-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+    
+    .settings-content {
+      display: none;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #eee;
+    }
+    
+    .settings-content.show {
+      display: block;
+    }
+    
+    .device-info {
+      background: #f8f9fa;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #666;
+      margin-top: 12px;
+    }
+    
+    .device-info strong {
+      color: #333;
+    }
+    
+    .hidden {
+      display: none !important;
+    }
+    
+    .setup-required {
+      text-align: center;
+      padding: 40px 20px;
+    }
+    
+    .setup-required .emoji {
+      font-size: 4rem;
+      margin-bottom: 16px;
+    }
+    
+    .button-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    
+    .button-row .btn {
+      flex: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🐕 aibo リモコン</h1>
+      <p id="headerStatus">設定が必要です</p>
+    </header>
+    
+    <!-- 設定カード -->
+    <div class="card">
+      <div class="settings-toggle" onclick="toggleSettings()">
+        <h2 style="margin:0;">⚙️ 設定</h2>
+        <span id="settingsArrow">▼</span>
+      </div>
+      <div class="settings-content" id="settingsContent">
+        <div class="input-group">
+          <label>アクセストークン</label>
+          <input type="password" id="tokenInput" placeholder="トークンを入力">
+        </div>
+        <div class="button-row">
+          <button class="btn btn-primary" onclick="saveToken()">保存</button>
+          <button class="btn btn-secondary" onclick="fetchDevices()">接続テスト</button>
+        </div>
+        <div class="device-info" id="deviceInfo" style="display:none;">
+          <strong>接続中のaibo:</strong><br>
+          <span id="deviceName">-</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 未設定時の表示 -->
+    <div class="card" id="setupRequired">
+      <div class="setup-required">
+        <div class="emoji">🔧</div>
+        <p>まず上の「設定」を開いて、<br>アクセストークンを入力してください。</p>
+      </div>
+    </div>
+    
+    <!-- アクションボタン -->
+    <div class="card hidden" id="actionPanel">
+      <h2>🎮 ふるまい</h2>
+      <div class="action-grid">
+        <button class="action-btn" onclick="executeAction('paw')">
+          <span class="emoji">🤝</span>
+          お手
+        </button>
+        <button class="action-btn" onclick="executeAction('highFive')">
+          <span class="emoji">✋</span>
+          ハイタッチ
+        </button>
+        <button class="action-btn" onclick="executeAction('bark')">
+          <span class="emoji">🗣️</span>
+          ほえて
+        </button>
+        <button class="action-btn" onclick="executeAction('friendly')">
+          <span class="emoji">💕</span>
+          なかよし
+        </button>
+        <button class="action-btn" onclick="executeAction('dance')">
+          <span class="emoji">💃</span>
+          ダンス
+        </button>
+        <button class="action-btn" onclick="executeAction('sing')">
+          <span class="emoji">🎤</span>
+          歌う
+        </button>
+        <button class="action-btn" onclick="executeAction('stretch')">
+          <span class="emoji">🙆</span>
+          伸び
+        </button>
+        <button class="action-btn" onclick="executeAction('overJoyed')">
+          <span class="emoji">🎉</span>
+          大喜び
+        </button>
+      </div>
+      <div class="status" id="actionStatus"></div>
+    </div>
+  </div>
+
+  <script>
+    // ========== 定数 ==========
+    const API_BASE = 'https://public.api.aibo.com/v1';
+    const STORAGE_KEY_TOKEN = 'aibo_token';
+    const STORAGE_KEY_DEVICE = 'aibo_device_id';
+    const STORAGE_KEY_DEVICE_NAME = 'aibo_device_name';
+    
+    // ========== 状態管理 ==========
+    let currentToken = '';
+    let currentDeviceId = '';
+    let currentDeviceName = '';
+    
+    // ========== 初期化 ==========
+    document.addEventListener('DOMContentLoaded', () => {
+      loadSettings();
+      updateUI();
+    });
+    
+    function loadSettings() {
+      currentToken = localStorage.getItem(STORAGE_KEY_TOKEN) || '';
+      currentDeviceId = localStorage.getItem(STORAGE_KEY_DEVICE) || '';
+      currentDeviceName = localStorage.getItem(STORAGE_KEY_DEVICE_NAME) || '';
+      
+      document.getElementById('tokenInput').value = currentToken;
+    }
+    
+    function updateUI() {
+      const isReady = currentToken && currentDeviceId;
+      
+      document.getElementById('setupRequired').classList.toggle('hidden', isReady);
+      document.getElementById('actionPanel').classList.toggle('hidden', !isReady);
+      document.getElementById('headerStatus').textContent = isReady 
+        ? `${currentDeviceName || 'aibo'} と接続中` 
+        : '設定が必要です';
+      
+      if (currentDeviceId) {
+        document.getElementById('deviceInfo').style.display = 'block';
+        document.getElementById('deviceName').textContent = currentDeviceName || currentDeviceId;
+      } else {
+        document.getElementById('deviceInfo').style.display = 'none';
+      }
+    }
+    
+    // ========== 設定関連 ==========
+    function toggleSettings() {
+      const content = document.getElementById('settingsContent');
+      const arrow = document.getElementById('settingsArrow');
+      const isShow = content.classList.toggle('show');
+      arrow.textContent = isShow ? '▲' : '▼';
+    }
+    
+    function saveToken() {
+      const token = document.getElementById('tokenInput').value.trim();
+      if (!token) {
+        alert('トークンを入力してください');
+        return;
+      }
+      
+      currentToken = token;
+      localStorage.setItem(STORAGE_KEY_TOKEN, token);
+      
+      // トークン変更時はデバイス情報をクリア
+      currentDeviceId = '';
+      currentDeviceName = '';
+      localStorage.removeItem(STORAGE_KEY_DEVICE);
+      localStorage.removeItem(STORAGE_KEY_DEVICE_NAME);
+      
+      updateUI();
+      alert('トークンを保存しました。\n「接続テスト」を押してaiboと接続してください。');
+    }
+    
+    async function fetchDevices() {
+      if (!currentToken) {
+        alert('先にトークンを保存してください');
+        return;
+      }
+      
+      try {
+        const response = await fetch(`${API_BASE}/devices`, {
+          headers: { 'Authorization': `Bearer ${currentToken}` }
+        });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || `HTTP ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (!data.devices || data.devices.length === 0) {
+          alert('aiboが見つかりませんでした。\nトークンを確認してください。');
+          return;
+        }
+        
+        // 最初のデバイスを使用
+        const device = data.devices[0];
+        currentDeviceId = device.deviceId;
+        currentDeviceName = device.nickname || 'aibo';
+        
+        localStorage.setItem(STORAGE_KEY_DEVICE, currentDeviceId);
+        localStorage.setItem(STORAGE_KEY_DEVICE_NAME, currentDeviceName);
+        
+        updateUI();
+        alert(`${currentDeviceName} と接続しました！`);
+        
+      } catch (error) {
+        alert(`接続エラー: ${error.message}`);
+      }
+    }
+    
+    // ========== アクション実行 ==========
+    const ACTION_MAP = {
+      'paw': { category: 'paw', name: 'お手' },
+      'highFive': { category: 'highFive', name: 'ハイタッチ' },
+      'bark': { category: 'bark', name: 'ほえて' },
+      'friendly': { category: 'friendly', name: 'なかよし' },
+      'dance': { category: 'dance', name: 'ダンス' },
+      'sing': { category: 'sing', name: '歌う' },
+      'stretch': { category: 'stretch', name: '伸び' },
+      'overJoyed': { category: 'overJoyed', name: '大喜び' }
+    };
+    
+    async function executeAction(actionKey) {
+      const action = ACTION_MAP[actionKey];
+      if (!action) return;
+      
+      const statusEl = document.getElementById('actionStatus');
+      showStatus('loading', `${action.name} を実行中...`);
+      
+      // ボタンを一時的に無効化
+      const buttons = document.querySelectorAll('.action-btn');
+      buttons.forEach(btn => btn.disabled = true);
+      
+      try {
+        const response = await fetch(`${API_BASE}/devices/${currentDeviceId}/capabilities/play_motion/execute`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${currentToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            arguments: {
+              Category: action.category,
+              Mode: 'NONE'
+            }
+          })
+        });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || `HTTP ${response.status}`);
+        }
+        
+        const data = await response.json();
+        showStatus('success', `${action.name} を指示しました！`);
+        
+        // 3秒後にステータスを消す
+        setTimeout(() => {
+          statusEl.classList.remove('show');
+        }, 3000);
+        
+      } catch (error) {
+        showStatus('error', `エラー: ${error.message}`);
+      } finally {
+        buttons.forEach(btn => btn.disabled = false);
+      }
+    }
+    
+    function showStatus(type, message) {
+      const statusEl = document.getElementById('actionStatus');
+      statusEl.className = `status show ${type}`;
+      statusEl.textContent = message;
+    }
+    
+    // ========== Service Worker登録 ==========
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js')
+        .then(() => console.log('Service Worker registered'))
+        .catch(err => console.log('Service Worker registration failed:', err));
+    }
+  </script>
+</body>
+</html>
