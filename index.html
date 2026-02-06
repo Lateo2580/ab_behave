@@ -241,6 +241,43 @@
     .button-row .btn {
       flex: 1;
     }
+
+    .mode-section {
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .mode-btn {
+      width: 100%;
+      padding: 16px;
+      font-size: 15px;
+      font-weight: 600;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.2s;
+      color: white;
+    }
+
+    .mode-btn:active {
+      transform: scale(0.96);
+    }
+
+    .mode-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .mode-btn.standby {
+      background: linear-gradient(135deg, #43a047 0%, #66bb6a 100%);
+      box-shadow: 0 4px 15px rgba(67,160,71,0.3);
+    }
+
+    .mode-btn.normal {
+      background: linear-gradient(135deg, #fb8c00 0%, #ffa726 100%);
+      box-shadow: 0 4px 15px rgba(251,140,0,0.3);
+    }
   </style>
 </head>
 <body>
@@ -282,6 +319,12 @@
     
     <!-- アクションボタン -->
     <div class="card hidden" id="actionPanel">
+      <div class="mode-section">
+        <h2>📋 モード切替</h2>
+        <button class="mode-btn standby" id="modeBtn" onclick="toggleMode()">
+          ⏸️ 指示待ちにする
+        </button>
+      </div>
       <h2>🎮 ふるまい</h2>
       <div class="action-grid">
         <button class="action-btn" onclick="executeAction('paw')">
@@ -332,6 +375,7 @@
     let currentToken = '';
     let currentDeviceId = '';
     let currentDeviceName = '';
+    let isStandbyMode = false;
     
     // ========== 初期化 ==========
     document.addEventListener('DOMContentLoaded', () => {
@@ -489,6 +533,61 @@
       }
     }
     
+    // ========== モード切替 ==========
+    function updateModeButton() {
+      const btn = document.getElementById('modeBtn');
+      if (isStandbyMode) {
+        btn.textContent = '▶️ 指示待ちを解除する';
+        btn.className = 'mode-btn normal';
+      } else {
+        btn.textContent = '⏸️ 指示待ちにする';
+        btn.className = 'mode-btn standby';
+      }
+    }
+
+    async function toggleMode() {
+      const newMode = isStandbyMode ? 'NORMAL' : 'DEVELOPMENT';
+      const label = isStandbyMode ? '指示待ち解除' : '指示待ち';
+      const modeBtn = document.getElementById('modeBtn');
+
+      showStatus('loading', `${label}に切り替え中...`);
+      modeBtn.disabled = true;
+
+      try {
+        const response = await fetch(`${API_BASE}/devices/${currentDeviceId}/capabilities/set_mode/execute`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${currentToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            arguments: {
+              ModeName: newMode
+            }
+          })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || `HTTP ${response.status}`);
+        }
+
+        isStandbyMode = !isStandbyMode;
+        updateModeButton();
+        showStatus('success', `${label}に切り替えました！`);
+
+        const statusEl = document.getElementById('actionStatus');
+        setTimeout(() => {
+          statusEl.classList.remove('show');
+        }, 3000);
+
+      } catch (error) {
+        showStatus('error', `エラー: ${error.message}`);
+      } finally {
+        modeBtn.disabled = false;
+      }
+    }
+
     function showStatus(type, message) {
       const statusEl = document.getElementById('actionStatus');
       statusEl.className = `status show ${type}`;
