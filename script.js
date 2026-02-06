@@ -166,6 +166,63 @@ async function executeAction(actionKey) {
   }
 }
 
+// ========== 姿勢変更 ==========
+const POSTURE_MAP = {
+  'back': { name: 'おなかを見せる' },
+  'crouch': { name: 'しゃがむ' },
+  'down': { name: '伏せる' },
+  'down_and_lengthen_behind': { name: '寝転がる' },
+  'down_and_shorten_behind': { name: '足を曲げて寝転がる' },
+  'sit_and_raise_both_hands': { name: '両前足あげる' },
+  'sit': { name: 'すわる' },
+  'sleep': { name: '寝る姿勢' },
+  'stand': { name: '立つ' },
+  'stand_straight': { name: 'まっすぐ立つ' }
+};
+
+async function executePosture(postureKey) {
+  const posture = POSTURE_MAP[postureKey];
+  if (!posture) return;
+
+  const statusEl = document.getElementById('actionStatus');
+  showStatus('loading', `${posture.name} を実行中...`);
+
+  const buttons = document.querySelectorAll('.action-btn, .mode-btn');
+  buttons.forEach(btn => btn.disabled = true);
+
+  try {
+    const response = await fetch(`${API_BASE}/devices/${currentDeviceId}/capabilities/change_posture/execute`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${currentToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        arguments: {
+          FinalPosture: postureKey
+        }
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || `HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    showStatus('success', `${posture.name} を指示しました！`);
+
+    setTimeout(() => {
+      statusEl.classList.remove('show');
+    }, 3000);
+
+  } catch (error) {
+    showStatus('error', `エラー: ${error.message}`);
+  } finally {
+    buttons.forEach(btn => btn.disabled = false);
+  }
+}
+
 // ========== モード切替 ==========
 function updateModeButton() {
   const btn = document.getElementById('modeBtn');
