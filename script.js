@@ -124,8 +124,7 @@ async function executeAction(actionKey) {
   const action = ACTION_MAP[actionKey];
   if (!action) return;
 
-  const statusEl = document.getElementById('actionStatus');
-  showStatus('loading', `${action.name} を実行中...`);
+  showStatus('loading', `${action.name} を実行中...`, 'actionStatus');
 
   // ボタンを一時的に無効化
   const buttons = document.querySelectorAll('.action-btn');
@@ -152,15 +151,14 @@ async function executeAction(actionKey) {
     }
 
     const data = await response.json();
-    showStatus('success', `${action.name} を指示しました！`);
+    showStatus('success', `${action.name} を指示しました！`, 'actionStatus');
 
-    // 3秒後にステータスを消す
     setTimeout(() => {
-      statusEl.classList.remove('show');
+      document.getElementById('actionStatus').classList.remove('show');
     }, 3000);
 
   } catch (error) {
-    showStatus('error', `エラー: ${error.message}`);
+    showStatus('error', `エラー: ${error.message}`, 'actionStatus');
   } finally {
     buttons.forEach(btn => btn.disabled = false);
   }
@@ -184,8 +182,7 @@ async function executePosture(postureKey) {
   const posture = POSTURE_MAP[postureKey];
   if (!posture) return;
 
-  const statusEl = document.getElementById('actionStatus');
-  showStatus('loading', `${posture.name} を実行中...`);
+  showStatus('loading', `${posture.name} を実行中...`, 'actionStatus');
 
   const buttons = document.querySelectorAll('.action-btn, .mode-btn');
   buttons.forEach(btn => btn.disabled = true);
@@ -210,14 +207,14 @@ async function executePosture(postureKey) {
     }
 
     const data = await response.json();
-    showStatus('success', `${posture.name} を指示しました！`);
+    showStatus('success', `${posture.name} を指示しました！`, 'actionStatus');
 
     setTimeout(() => {
-      statusEl.classList.remove('show');
+      document.getElementById('actionStatus').classList.remove('show');
     }, 3000);
 
   } catch (error) {
-    showStatus('error', `エラー: ${error.message}`);
+    showStatus('error', `エラー: ${error.message}`, 'actionStatus');
   } finally {
     buttons.forEach(btn => btn.disabled = false);
   }
@@ -240,7 +237,7 @@ async function toggleMode() {
   const label = isStandbyMode ? '指示待ち解除' : '指示待ち';
   const modeBtn = document.getElementById('modeBtn');
 
-  showStatus('loading', `${label}に切り替え中...`);
+  showStatus('loading', `${label}に切り替え中...`, 'actionStatus');
   modeBtn.disabled = true;
 
   try {
@@ -264,24 +261,128 @@ async function toggleMode() {
 
     isStandbyMode = !isStandbyMode;
     updateModeButton();
-    showStatus('success', `${label}に切り替えました！`);
+    showStatus('success', `${label}に切り替えました！`, 'actionStatus');
 
-    const statusEl = document.getElementById('actionStatus');
     setTimeout(() => {
-      statusEl.classList.remove('show');
+      document.getElementById('actionStatus').classList.remove('show');
     }, 3000);
 
   } catch (error) {
-    showStatus('error', `エラー: ${error.message}`);
+    showStatus('error', `エラー: ${error.message}`, 'actionStatus');
   } finally {
     modeBtn.disabled = false;
   }
 }
 
-function showStatus(type, message) {
-  const statusEl = document.getElementById('actionStatus');
+function showStatus(type, message, targetId = 'actionStatus') {
+  const statusEl = document.getElementById(targetId);
   statusEl.className = `status show ${type}`;
   statusEl.textContent = message;
+}
+
+// ========== タブ切替 ==========
+function switchTab(tabName) {
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+  if (tabName === 'info') {
+    document.getElementById('tabInfo').classList.add('active');
+    document.getElementById('tabContentInfo').classList.add('active');
+  } else {
+    document.getElementById('tabAction').classList.add('active');
+    document.getElementById('tabContentAction').classList.add('active');
+  }
+}
+
+// ========== バッテリー状態取得 (HungryStatus) ==========
+const HUNGRY_STATUS_MAP = {
+  'satisfied': { icon: '🔋', label: '満充電', desc: 'チャージステーションの上で、十分に充電されています' },
+  'eating':    { icon: '🔌', label: '充電中', desc: 'チャージステーションの上で充電中です' },
+  'enough':    { icon: '✅', label: '十分', desc: '十分に移動可能なほど充電されています' },
+  'hungry':    { icon: '⚠️', label: '残りわずか', desc: '移動はできますが、充電が必要です' },
+  'famished':  { icon: '🪫', label: 'バッテリー切れ', desc: '移動もできないほどバッテリー残量が少ないです' }
+};
+
+async function checkHungryStatus() {
+  const checkBtn = document.getElementById('hungryCheckBtn');
+  checkBtn.disabled = true;
+  showStatus('loading', 'バッテリー状態を取得中...', 'infoStatus');
+
+  try {
+    // Step 1: Execute hungry_status
+    const execResponse = await fetch(`${API_BASE}/devices/${currentDeviceId}/capabilities/hungry_status/execute`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${currentToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({})
+    });
+
+    if (!execResponse.ok) {
+      const error = await execResponse.json();
+      throw new Error(error.message || `HTTP ${execResponse.status}`);
+    }
+
+    const execData = await execResponse.json();
+    const executionId = execData.executionId;
+
+    // Step 2: Poll for result
+    const result = await pollExecution(executionId);
+
+    if (result.status === 'SUCCEEDED' && result.result && result.result.hungry_status) {
+      const energy = result.result.hungry_status.energy;
+      updateHungryStatusDisplay(energy);
+      showStatus('success', 'バッテリー状態を取得しました！', 'infoStatus');
+
+      setTimeout(() => {
+        document.getElementById('infoStatus').classList.remove('show');
+      }, 3000);
+    } else if (result.status === 'FAILED') {
+      throw new Error('実行に失敗しました');
+    } else {
+      throw new Error(`予期しないステータス: ${result.status}`);
+    }
+
+  } catch (error) {
+    showStatus('error', `エラー: ${error.message}`, 'infoStatus');
+  } finally {
+    checkBtn.disabled = false;
+  }
+}
+
+async function pollExecution(executionId, maxRetries = 10, interval = 1000) {
+  for (let i = 0; i < maxRetries; i++) {
+    await new Promise(resolve => setTimeout(resolve, interval));
+
+    const response = await fetch(`${API_BASE}/executions/${executionId}`, {
+      headers: { 'Authorization': `Bearer ${currentToken}` }
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || `HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    if (data.status === 'SUCCEEDED' || data.status === 'FAILED') {
+      return data;
+    }
+  }
+
+  throw new Error('タイムアウト: 結果を取得できませんでした');
+}
+
+function updateHungryStatusDisplay(energy) {
+  const info = HUNGRY_STATUS_MAP[energy] || { icon: '❓', label: energy, desc: '不明な状態です' };
+
+  document.getElementById('hungryStatusIcon').textContent = info.icon;
+  document.getElementById('hungryStatusLabel').textContent = info.label;
+  document.getElementById('hungryStatusDesc').textContent = info.desc;
+
+  const display = document.getElementById('hungryStatusDisplay');
+  display.className = `hungry-status-display status-${energy}`;
 }
 
 // ========== Service Worker登録 ==========
