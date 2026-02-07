@@ -385,6 +385,73 @@ function updateHungryStatusDisplay(energy) {
   display.className = `hungry-status-display status-${energy}`;
 }
 
+// ========== 眠さ状態取得 (SleepyStatus) ==========
+const SLEEPY_STATUS_MAP = {
+  'no_sleepy':  { icon: '😆', label: '元気', desc: 'まったく眠くなく、元気に活動中' },
+  'boring':     { icon: '😐', label: '退屈', desc: '刺激がなく、退屈な状態' },
+  'sleepy':     { icon: '😪', label: '眠い', desc: '眠くなってきた状態' },
+  'very_sleepy':{ icon: '😴', label: 'とても眠い', desc: 'かなり眠く、もう少しで寝そうな状態' }
+};
+
+async function checkSleepyStatus() {
+  const checkBtn = document.getElementById('sleepyCheckBtn');
+  checkBtn.disabled = true;
+  showStatus('loading', '眠さ状態を取得中...', 'infoStatus');
+
+  try {
+    // Step 1: Execute sleepy_status
+    const execResponse = await fetch(`${API_BASE}/devices/${currentDeviceId}/capabilities/sleepy_status/execute`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${currentToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({})
+    });
+
+    if (!execResponse.ok) {
+      const error = await execResponse.json();
+      throw new Error(error.message || `HTTP ${execResponse.status}`);
+    }
+
+    const execData = await execResponse.json();
+    const executionId = execData.executionId;
+
+    // Step 2: Poll for result
+    const result = await pollExecution(executionId);
+
+    if (result.status === 'SUCCEEDED' && result.result && result.result.sleepy_status) {
+      const status = result.result.sleepy_status.status;
+      updateSleepyStatusDisplay(status);
+      showStatus('success', '眠さ状態を取得しました！', 'infoStatus');
+
+      setTimeout(() => {
+        document.getElementById('infoStatus').classList.remove('show');
+      }, 3000);
+    } else if (result.status === 'FAILED') {
+      throw new Error('実行に失敗しました');
+    } else {
+      throw new Error(`予期しないステータス: ${result.status}`);
+    }
+
+  } catch (error) {
+    showStatus('error', `エラー: ${error.message}`, 'infoStatus');
+  } finally {
+    checkBtn.disabled = false;
+  }
+}
+
+function updateSleepyStatusDisplay(status) {
+  const info = SLEEPY_STATUS_MAP[status] || { icon: '❓', label: status, desc: '不明な状態です' };
+
+  document.getElementById('sleepyStatusIcon').textContent = info.icon;
+  document.getElementById('sleepyStatusLabel').textContent = info.label;
+  document.getElementById('sleepyStatusDesc').textContent = info.desc;
+
+  const display = document.getElementById('sleepyStatusDisplay');
+  display.className = `sleepy-status-display status-${status}`;
+}
+
 // ========== Service Worker登録 ==========
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js')
