@@ -1,7 +1,7 @@
 {
-  "name": "aibo リモコン",
-  "short_name": "aiboリモコン",
-  "description": "aiboにふるまいを指示するリモコンアプリ",
+  "name": "ab_behave",
+  "short_name": "ab_behave",
+  "description": "ふるまいを指示するリモコンアプリ",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#667eea",
