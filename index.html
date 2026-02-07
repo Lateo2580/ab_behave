@@ -48,95 +48,120 @@
       </div>
     </div>
 
-    <!-- アクションボタン -->
-    <div class="card hidden" id="actionPanel">
-      <div class="mode-section">
-        <h2>📋 モード切替</h2>
-        <button class="mode-btn standby" id="modeBtn" onclick="toggleMode()">
-          ⏸️ 指示待ちにする
-        </button>
+    <!-- タブ付きパネル -->
+    <div class="hidden" id="actionPanel">
+      <!-- タブヘッダー -->
+      <div class="tab-header">
+        <button class="tab-btn active" onclick="switchTab('info')" id="tabInfo">📊 情報取得</button>
+        <button class="tab-btn" onclick="switchTab('action')" id="tabAction">🎮 アクション</button>
       </div>
-      <h2>🎮 ふるまい</h2>
-      <div class="action-grid">
-        <button class="action-btn" onclick="executeAction('paw')">
-          <span class="emoji">🤝</span>
-          お手
-        </button>
-        <button class="action-btn" onclick="executeAction('highFive')">
-          <span class="emoji">✋</span>
-          ハイタッチ
-        </button>
-        <button class="action-btn" onclick="executeAction('bark')">
-          <span class="emoji">🗣️</span>
-          ほえて
-        </button>
-        <button class="action-btn" onclick="executeAction('friendly')">
-          <span class="emoji">💕</span>
-          なかよし
-        </button>
-        <button class="action-btn" onclick="executeAction('dance')">
-          <span class="emoji">💃</span>
-          ダンス
-        </button>
-        <button class="action-btn" onclick="executeAction('sing')">
-          <span class="emoji">🎤</span>
-          歌う
-        </button>
-        <button class="action-btn" onclick="executeAction('stretch')">
-          <span class="emoji">🙆</span>
-          伸び
-        </button>
-        <button class="action-btn" onclick="executeAction('overJoyed')">
-          <span class="emoji">🎉</span>
-          大喜び
-        </button>
-      </div>
-      <div class="posture-section">
-        <h2>🐾 姿勢を変える</h2>
-        <div class="action-grid">
-          <button class="action-btn posture-btn" onclick="executePosture('stand')">
-            <span class="emoji">🧍</span>
-            立つ
-          </button>
-          <button class="action-btn posture-btn" onclick="executePosture('stand_straight')">
-            <span class="emoji">📐</span>
-            まっすぐ立つ
-          </button>
-          <button class="action-btn posture-btn" onclick="executePosture('sit')">
-            <span class="emoji">🪑</span>
-            すわる
-          </button>
-          <button class="action-btn posture-btn" onclick="executePosture('sit_and_raise_both_hands')">
-            <span class="emoji">🙌</span>
-            両前足あげる
-          </button>
-          <button class="action-btn posture-btn" onclick="executePosture('down')">
-            <span class="emoji">⬇️</span>
-            伏せる
-          </button>
-          <button class="action-btn posture-btn" onclick="executePosture('crouch')">
-            <span class="emoji">🦆</span>
-            しゃがむ
-          </button>
-          <button class="action-btn posture-btn" onclick="executePosture('down_and_lengthen_behind')">
-            <span class="emoji">😴</span>
-            寝転がる
-          </button>
-          <button class="action-btn posture-btn" onclick="executePosture('down_and_shorten_behind')">
-            <span class="emoji">🛌</span>
-            足を曲げて寝転がる
-          </button>
-          <button class="action-btn posture-btn" onclick="executePosture('sleep')">
-            <span class="emoji">💤</span>
-            寝る姿勢
-          </button>
-          <button class="action-btn posture-btn" onclick="executePosture('back')">
-            <span class="emoji">🔄</span>
-            おなかを見せる
+
+      <!-- 情報取得タブ -->
+      <div class="card tab-content active" id="tabContentInfo">
+        <h2>🔋 バッテリー状態</h2>
+        <div class="hungry-status-section">
+          <div class="hungry-status-display" id="hungryStatusDisplay">
+            <div class="hungry-status-icon" id="hungryStatusIcon">🔋</div>
+            <div class="hungry-status-label" id="hungryStatusLabel">未取得</div>
+            <div class="hungry-status-desc" id="hungryStatusDesc">ボタンを押して状態を確認してください</div>
+          </div>
+          <button class="btn btn-primary hungry-check-btn" id="hungryCheckBtn" onclick="checkHungryStatus()">
+            バッテリー状態を確認
           </button>
         </div>
+        <div class="status" id="infoStatus"></div>
       </div>
-      <div class="status" id="actionStatus"></div>
+
+      <!-- アクション実行タブ -->
+      <div class="card tab-content" id="tabContentAction">
+        <div class="mode-section">
+          <h2>📋 モード切替</h2>
+          <button class="mode-btn standby" id="modeBtn" onclick="toggleMode()">
+            ⏸️ 指示待ちにする
+          </button>
+        </div>
+        <h2>🎮 ふるまい</h2>
+        <div class="action-grid">
+          <button class="action-btn" onclick="executeAction('paw')">
+            <span class="emoji">🤝</span>
+            お手
+          </button>
+          <button class="action-btn" onclick="executeAction('highFive')">
+            <span class="emoji">✋</span>
+            ハイタッチ
+          </button>
+          <button class="action-btn" onclick="executeAction('bark')">
+            <span class="emoji">🗣️</span>
+            ほえて
+          </button>
+          <button class="action-btn" onclick="executeAction('friendly')">
+            <span class="emoji">💕</span>
+            なかよし
+          </button>
+          <button class="action-btn" onclick="executeAction('dance')">
+            <span class="emoji">💃</span>
+            ダンス
+          </button>
+          <button class="action-btn" onclick="executeAction('sing')">
+            <span class="emoji">🎤</span>
+            歌う
+          </button>
+          <button class="action-btn" onclick="executeAction('stretch')">
+            <span class="emoji">🙆</span>
+            伸び
+          </button>
+          <button class="action-btn" onclick="executeAction('overJoyed')">
+            <span class="emoji">🎉</span>
+            大喜び
+          </button>
+        </div>
+        <div class="posture-section">
+          <h2>🐾 姿勢を変える</h2>
+          <div class="action-grid">
+            <button class="action-btn posture-btn" onclick="executePosture('stand')">
+              <span class="emoji">🧍</span>
+              立つ
+            </button>
+            <button class="action-btn posture-btn" onclick="executePosture('stand_straight')">
+              <span class="emoji">📐</span>
+              まっすぐ立つ
+            </button>
+            <button class="action-btn posture-btn" onclick="executePosture('sit')">
+              <span class="emoji">🪑</span>
+              すわる
+            </button>
+            <button class="action-btn posture-btn" onclick="executePosture('sit_and_raise_both_hands')">
+              <span class="emoji">🙌</span>
+              両前足あげる
+            </button>
+            <button class="action-btn posture-btn" onclick="executePosture('down')">
+              <span class="emoji">⬇️</span>
+              伏せる
+            </button>
+            <button class="action-btn posture-btn" onclick="executePosture('crouch')">
+              <span class="emoji">🦆</span>
+              しゃがむ
+            </button>
+            <button class="action-btn posture-btn" onclick="executePosture('down_and_lengthen_behind')">
+              <span class="emoji">😴</span>
+              寝転がる
+            </button>
+            <button class="action-btn posture-btn" onclick="executePosture('down_and_shorten_behind')">
+              <span class="emoji">🛌</span>
+              足を曲げて寝転がる
+            </button>
+            <button class="action-btn posture-btn" onclick="executePosture('sleep')">
+              <span class="emoji">💤</span>
+              寝る姿勢
+            </button>
+            <button class="action-btn posture-btn" onclick="executePosture('back')">
+              <span class="emoji">🔄</span>
+              おなかを見せる
+            </button>
+          </div>
+        </div>
+        <div class="status" id="actionStatus"></div>
+      </div>
     </div>
   </div>
 

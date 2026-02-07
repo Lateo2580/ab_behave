@@ -277,3 +277,124 @@ header p {
   background: linear-gradient(135deg, #fb8c00 0%, #ffa726 100%);
   box-shadow: 0 4px 15px rgba(251,140,0,0.3);
 }
+
+/* ========== タブ ========== */
+.tab-header {
+  display: flex;
+  gap: 0;
+  margin-bottom: 0;
+  background: white;
+  border-radius: 16px 16px 0 0;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 14px 16px;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  background: #f0f0f0;
+  color: #888;
+  transition: background 0.2s, color 0.2s;
+}
+
+.tab-btn.active {
+  background: white;
+  color: #333;
+}
+
+.tab-btn:first-child {
+  border-radius: 16px 0 0 0;
+}
+
+.tab-btn:last-child {
+  border-radius: 0 16px 0 0;
+}
+
+.tab-content {
+  display: none;
+  border-radius: 0 0 16px 16px;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* ========== バッテリー状態 (HungryStatus) ========== */
+.hungry-status-section {
+  text-align: center;
+}
+
+.hungry-status-display {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 24px 16px;
+  margin-bottom: 16px;
+  transition: background 0.3s;
+}
+
+.hungry-status-icon {
+  font-size: 3rem;
+  margin-bottom: 8px;
+}
+
+.hungry-status-label {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.hungry-status-desc {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.hungry-check-btn {
+  width: 100%;
+  padding: 14px;
+}
+
+/* HungryStatus 状態別カラー */
+.hungry-status-display.status-satisfied {
+  background: #e8f5e9;
+}
+
+.hungry-status-display.status-satisfied .hungry-status-label {
+  color: #2e7d32;
+}
+
+.hungry-status-display.status-eating {
+  background: #e3f2fd;
+}
+
+.hungry-status-display.status-eating .hungry-status-label {
+  color: #1565c0;
+}
+
+.hungry-status-display.status-enough {
+  background: #e8f5e9;
+}
+
+.hungry-status-display.status-enough .hungry-status-label {
+  color: #2e7d32;
+}
+
+.hungry-status-display.status-hungry {
+  background: #fff3e0;
+}
+
+.hungry-status-display.status-hungry .hungry-status-label {
+  color: #e65100;
+}
+
+.hungry-status-display.status-famished {
+  background: #ffebee;
+}
+
+.hungry-status-display.status-famished .hungry-status-label {
+  color: #c62828;
+}
