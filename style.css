@@ -398,3 +398,71 @@ header p {
 .hungry-status-display.status-famished .hungry-status-label {
   color: #c62828;
 }
+
+/* ========== 眠さ状態 (SleepyStatus) ========== */
+.sleepy-status-section {
+  text-align: center;
+}
+
+.sleepy-status-display {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 24px 16px;
+  margin-bottom: 16px;
+  transition: background 0.3s;
+}
+
+.sleepy-status-icon {
+  font-size: 3rem;
+  margin-bottom: 8px;
+}
+
+.sleepy-status-label {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.sleepy-status-desc {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.sleepy-check-btn {
+  width: 100%;
+  padding: 14px;
+}
+
+/* SleepyStatus 状態別カラー */
+.sleepy-status-display.status-no_sleepy {
+  background: #e8f5e9;
+}
+
+.sleepy-status-display.status-no_sleepy .sleepy-status-label {
+  color: #2e7d32;
+}
+
+.sleepy-status-display.status-boring {
+  background: #fff3e0;
+}
+
+.sleepy-status-display.status-boring .sleepy-status-label {
+  color: #e65100;
+}
+
+.sleepy-status-display.status-sleepy {
+  background: #e3f2fd;
+}
+
+.sleepy-status-display.status-sleepy .sleepy-status-label {
+  color: #1565c0;
+}
+
+.sleepy-status-display.status-very_sleepy {
+  background: #ede7f6;
+}
+
+.sleepy-status-display.status-very_sleepy .sleepy-status-label {
+  color: #4527a0;
+}
