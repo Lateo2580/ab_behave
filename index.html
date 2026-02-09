@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self' https://public.api.aibo.com; img-src 'self'; font-src 'self';">
+  <meta name="referrer" content="no-referrer">
   <meta name="theme-color" content="#ff6b9d">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -20,7 +22,7 @@
 
     <!-- 設定カード -->
     <div class="card">
-      <div class="settings-toggle" onclick="toggleSettings()">
+      <div class="settings-toggle" id="settingsToggle">
         <h2 style="margin:0;">⚙️ 設定</h2>
         <span id="settingsArrow">▼</span>
       </div>
@@ -30,8 +32,8 @@
           <input type="password" id="tokenInput" placeholder="トークンを入力">
         </div>
         <div class="button-row">
-          <button class="btn btn-primary" onclick="saveToken()">保存</button>
-          <button class="btn btn-secondary" onclick="fetchDevices()">接続テスト</button>
+          <button class="btn btn-primary" id="saveTokenBtn">保存</button>
+          <button class="btn btn-secondary" id="fetchDevicesBtn">接続テスト</button>
         </div>
         <div class="device-info" id="deviceInfo" style="display:none;">
           <strong>接続中:</strong><br>
@@ -52,8 +54,8 @@
     <div class="hidden" id="actionPanel">
       <!-- タブヘッダー -->
       <div class="tab-header">
-        <button class="tab-btn active" onclick="switchTab('info')" id="tabInfo">📊 情報取得</button>
-        <button class="tab-btn" onclick="switchTab('action')" id="tabAction">🎮 アクション</button>
+        <button class="tab-btn active" id="tabInfo">📊 情報取得</button>
+        <button class="tab-btn" id="tabAction">🎮 アクション</button>
       </div>
 
       <!-- 情報取得タブ -->
@@ -65,7 +67,7 @@
             <div class="hungry-status-label" id="hungryStatusLabel">未取得</div>
             <div class="hungry-status-desc" id="hungryStatusDesc">ボタンを押して状態を確認してください</div>
           </div>
-          <button class="btn btn-primary hungry-check-btn" id="hungryCheckBtn" onclick="checkHungryStatus()">
+          <button class="btn btn-primary hungry-check-btn" id="hungryCheckBtn">
             バッテリー状態を確認
           </button>
         </div>
@@ -76,7 +78,7 @@
             <div class="sleepy-status-label" id="sleepyStatusLabel">未取得</div>
             <div class="sleepy-status-desc" id="sleepyStatusDesc">ボタンを押して状態を確認してください</div>
           </div>
-          <button class="btn btn-primary sleepy-check-btn" id="sleepyCheckBtn" onclick="checkSleepyStatus()">
+          <button class="btn btn-primary sleepy-check-btn" id="sleepyCheckBtn">
             眠さ状態を確認
           </button>
         </div>
@@ -87,41 +89,41 @@
       <div class="card tab-content" id="tabContentAction">
         <div class="mode-section">
           <h2>📋 モード切替</h2>
-          <button class="mode-btn standby" id="modeBtn" onclick="toggleMode()">
+          <button class="mode-btn standby" id="modeBtn">
             ⏸️ 指示待ちにする
           </button>
         </div>
         <h2>🎮 ふるまい</h2>
         <div class="action-grid">
-          <button class="action-btn" onclick="executeAction('paw')">
+          <button class="action-btn" data-action="paw">
             <span class="emoji">🤝</span>
             お手
           </button>
-          <button class="action-btn" onclick="executeAction('highFive')">
+          <button class="action-btn" data-action="highFive">
             <span class="emoji">✋</span>
             ハイタッチ
           </button>
-          <button class="action-btn" onclick="executeAction('bark')">
+          <button class="action-btn" data-action="bark">
             <span class="emoji">🗣️</span>
             ほえて
           </button>
-          <button class="action-btn" onclick="executeAction('friendly')">
+          <button class="action-btn" data-action="friendly">
             <span class="emoji">💕</span>
             なかよし
           </button>
-          <button class="action-btn" onclick="executeAction('dance')">
+          <button class="action-btn" data-action="dance">
             <span class="emoji">💃</span>
             ダンス
           </button>
-          <button class="action-btn" onclick="executeAction('sing')">
+          <button class="action-btn" data-action="sing">
             <span class="emoji">🎤</span>
             歌う
           </button>
-          <button class="action-btn" onclick="executeAction('stretch')">
+          <button class="action-btn" data-action="stretch">
             <span class="emoji">🙆</span>
             伸び
           </button>
-          <button class="action-btn" onclick="executeAction('overJoyed')">
+          <button class="action-btn" data-action="overJoyed">
             <span class="emoji">🎉</span>
             大喜び
           </button>
@@ -129,43 +131,43 @@
         <div class="posture-section">
           <h2>🐾 姿勢を変える</h2>
           <div class="action-grid">
-            <button class="action-btn posture-btn" onclick="executePosture('stand')">
+            <button class="action-btn posture-btn" data-posture="stand">
               <span class="emoji">🧍</span>
               立つ
             </button>
-            <button class="action-btn posture-btn" onclick="executePosture('stand_straight')">
+            <button class="action-btn posture-btn" data-posture="stand_straight">
               <span class="emoji">📐</span>
               まっすぐ立つ
             </button>
-            <button class="action-btn posture-btn" onclick="executePosture('sit')">
+            <button class="action-btn posture-btn" data-posture="sit">
               <span class="emoji">🪑</span>
               すわる
             </button>
-            <button class="action-btn posture-btn" onclick="executePosture('sit_and_raise_both_hands')">
+            <button class="action-btn posture-btn" data-posture="sit_and_raise_both_hands">
               <span class="emoji">🙌</span>
               両前足あげる
             </button>
-            <button class="action-btn posture-btn" onclick="executePosture('down')">
+            <button class="action-btn posture-btn" data-posture="down">
               <span class="emoji">⬇️</span>
               伏せる
             </button>
-            <button class="action-btn posture-btn" onclick="executePosture('crouch')">
+            <button class="action-btn posture-btn" data-posture="crouch">
               <span class="emoji">🦆</span>
               しゃがむ
             </button>
-            <button class="action-btn posture-btn" onclick="executePosture('down_and_lengthen_behind')">
+            <button class="action-btn posture-btn" data-posture="down_and_lengthen_behind">
               <span class="emoji">😴</span>
               寝転がる
             </button>
-            <button class="action-btn posture-btn" onclick="executePosture('down_and_shorten_behind')">
+            <button class="action-btn posture-btn" data-posture="down_and_shorten_behind">
               <span class="emoji">🛌</span>
               足を曲げて寝転がる
             </button>
-            <button class="action-btn posture-btn" onclick="executePosture('sleep')">
+            <button class="action-btn posture-btn" data-posture="sleep">
               <span class="emoji">💤</span>
               寝る姿勢
             </button>
-            <button class="action-btn posture-btn" onclick="executePosture('back')">
+            <button class="action-btn posture-btn" data-posture="back">
               <span class="emoji">🔄</span>
               おなかを見せる
             </button>

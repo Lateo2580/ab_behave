@@ -1,7 +1,9 @@
-const CACHE_NAME = 'aibo-remote-v1';
+const CACHE_NAME = 'aibo-remote-v2';
 const urlsToCache = [
   './',
   './index.html',
+  './style.css',
+  './script.js',
   './manifest.json',
   './icon-192.png',
   './icon-512.png'
