@@ -1,8 +1,12 @@
 // ========== 定数 ==========
 const API_BASE = 'https://public.api.aibo.com/v1';
 const STORAGE_KEY_TOKEN = 'aibo_token';
+const STORAGE_KEY_TOKEN_IV = 'aibo_token_iv';
 const STORAGE_KEY_DEVICE = 'aibo_device_id';
 const STORAGE_KEY_DEVICE_NAME = 'aibo_device_name';
+const CRYPTO_DB_NAME = 'aibo_keystore';
+const CRYPTO_STORE_NAME = 'keys';
+const CRYPTO_KEY_ID = 'token_key';
 
 // ========== 状態管理 ==========
 let currentToken = '';
@@ -10,18 +14,140 @@ let currentDeviceId = '';
 let currentDeviceName = '';
 let isStandbyMode = false;
 
+// ========== 暗号化ユーティリティ (AES-GCM via Web Crypto API) ==========
+
+function openKeyStore() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(CRYPTO_DB_NAME, 1);
+    request.onupgradeneeded = () => {
+      request.result.createObjectStore(CRYPTO_STORE_NAME);
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function getOrCreateCryptoKey() {
+  const db = await openKeyStore();
+
+  // 既存の鍵を取得
+  const existing = await new Promise((resolve, reject) => {
+    const tx = db.transaction(CRYPTO_STORE_NAME, 'readonly');
+    const req = tx.objectStore(CRYPTO_STORE_NAME).get(CRYPTO_KEY_ID);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+
+  if (existing) {
+    db.close();
+    return existing;
+  }
+
+  // 新規鍵を生成して保存
+  const key = await crypto.subtle.generateKey(
+    { name: 'AES-GCM', length: 256 },
+    false,  // extractable=false で鍵のエクスポートを禁止
+    ['encrypt', 'decrypt']
+  );
+
+  await new Promise((resolve, reject) => {
+    const tx = db.transaction(CRYPTO_STORE_NAME, 'readwrite');
+    const req = tx.objectStore(CRYPTO_STORE_NAME).put(key, CRYPTO_KEY_ID);
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+  });
+
+  db.close();
+  return key;
+}
+
+async function encryptToken(plaintext) {
+  const key = await getOrCreateCryptoKey();
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const encoded = new TextEncoder().encode(plaintext);
+  const ciphertext = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    encoded
+  );
+
+  // IV と暗号文を Base64 で localStorage に保存
+  return {
+    iv: btoa(String.fromCharCode(...iv)),
+    data: btoa(String.fromCharCode(...new Uint8Array(ciphertext)))
+  };
+}
+
+async function decryptToken(ivB64, dataB64) {
+  const key = await getOrCreateCryptoKey();
+  const iv = Uint8Array.from(atob(ivB64), c => c.charCodeAt(0));
+  const ciphertext = Uint8Array.from(atob(dataB64), c => c.charCodeAt(0));
+  const decrypted = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    ciphertext
+  );
+  return new TextDecoder().decode(decrypted);
+}
+
 // ========== 初期化 ==========
-document.addEventListener('DOMContentLoaded', () => {
-  loadSettings();
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadSettings();
   updateUI();
+  bindEvents();
 });
 
-function loadSettings() {
-  currentToken = localStorage.getItem(STORAGE_KEY_TOKEN) || '';
+function bindEvents() {
+  // 設定パネル
+  document.getElementById('settingsToggle').addEventListener('click', toggleSettings);
+  document.getElementById('saveTokenBtn').addEventListener('click', saveToken);
+  document.getElementById('fetchDevicesBtn').addEventListener('click', fetchDevices);
+
+  // タブ切替
+  document.getElementById('tabInfo').addEventListener('click', () => switchTab('info'));
+  document.getElementById('tabAction').addEventListener('click', () => switchTab('action'));
+
+  // 情報取得
+  document.getElementById('hungryCheckBtn').addEventListener('click', checkHungryStatus);
+  document.getElementById('sleepyCheckBtn').addEventListener('click', checkSleepyStatus);
+
+  // モード切替
+  document.getElementById('modeBtn').addEventListener('click', toggleMode);
+
+  // アクションボタン (イベント委譲)
+  document.querySelectorAll('[data-action]').forEach(btn => {
+    btn.addEventListener('click', () => executeAction(btn.dataset.action));
+  });
+
+  // 姿勢ボタン (イベント委譲)
+  document.querySelectorAll('[data-posture]').forEach(btn => {
+    btn.addEventListener('click', () => executePosture(btn.dataset.posture));
+  });
+}
+
+async function loadSettings() {
   currentDeviceId = localStorage.getItem(STORAGE_KEY_DEVICE) || '';
   currentDeviceName = localStorage.getItem(STORAGE_KEY_DEVICE_NAME) || '';
 
-  document.getElementById('tokenInput').value = currentToken;
+  // 暗号化されたトークンを復号
+  const ivB64 = localStorage.getItem(STORAGE_KEY_TOKEN_IV);
+  const dataB64 = localStorage.getItem(STORAGE_KEY_TOKEN);
+  if (ivB64 && dataB64) {
+    try {
+      currentToken = await decryptToken(ivB64, dataB64);
+    } catch {
+      // 復号失敗時（鍵が変わった等）はクリア
+      currentToken = '';
+      localStorage.removeItem(STORAGE_KEY_TOKEN);
+      localStorage.removeItem(STORAGE_KEY_TOKEN_IV);
+    }
+  } else {
+    currentToken = '';
+  }
+
+  // パスワード欄にはマスク表示のみ（トークン文字列は再代入しない）
+  document.getElementById('tokenInput').value = currentToken ? '********' : '';
+  document.getElementById('tokenInput').dataset.hasToken = currentToken ? 'true' : 'false';
 }
 
 function updateUI() {
@@ -49,21 +175,39 @@ function toggleSettings() {
   arrow.textContent = isShow ? '▲' : '▼';
 }
 
-function saveToken() {
-  const token = document.getElementById('tokenInput').value.trim();
-  if (!token) {
-    alert('トークンを入力してください');
+async function saveToken() {
+  const input = document.getElementById('tokenInput');
+  const token = input.value.trim();
+
+  // マスク文字列のままの場合は変更なしとみなす
+  if (!token || (token === '********' && input.dataset.hasToken === 'true')) {
+    if (!token) {
+      alert('トークンを入力してください');
+    }
     return;
   }
 
   currentToken = token;
-  localStorage.setItem(STORAGE_KEY_TOKEN, token);
+
+  // AES-GCM で暗号化して保存
+  try {
+    const encrypted = await encryptToken(token);
+    localStorage.setItem(STORAGE_KEY_TOKEN, encrypted.data);
+    localStorage.setItem(STORAGE_KEY_TOKEN_IV, encrypted.iv);
+  } catch {
+    alert('暗号化に失敗しました。ブラウザが Web Crypto API に対応しているか確認してください。');
+    return;
+  }
 
   // トークン変更時はデバイス情報をクリア
   currentDeviceId = '';
   currentDeviceName = '';
   localStorage.removeItem(STORAGE_KEY_DEVICE);
   localStorage.removeItem(STORAGE_KEY_DEVICE_NAME);
+
+  // 保存後はマスク表示に戻す
+  input.value = '********';
+  input.dataset.hasToken = 'true';
 
   updateUI();
   alert('トークンを保存しました。\n「接続テスト」を押してaiboと接続してください。');
