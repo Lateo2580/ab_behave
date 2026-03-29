@@ -254,11 +254,80 @@ async function decryptToken(ivB64, dataB64) {
   return new TextDecoder().decode(decrypted);
 }
 
+// ========== 動的UI生成 ==========
+function buildMotionAccordion() {
+  const container = document.getElementById('motionAccordion');
+  if (!container) return;
+
+  MOTION_GROUPS.forEach(group => {
+    const section = document.createElement('div');
+    section.className = 'accordion-section';
+
+    const header = document.createElement('div');
+    header.className = 'accordion-header';
+    header.innerHTML = `<span>${group.label}</span><span class="accordion-arrow">▼</span>`;
+    header.addEventListener('click', () => {
+      const content = section.querySelector('.accordion-content');
+      const arrow = header.querySelector('.accordion-arrow');
+      const isOpen = content.classList.toggle('open');
+      arrow.textContent = isOpen ? '▲' : '▼';
+    });
+
+    const content = document.createElement('div');
+    content.className = 'accordion-content';
+
+    const grid = document.createElement('div');
+    grid.className = 'action-grid';
+
+    group.motions.forEach(motion => {
+      const btn = document.createElement('button');
+      btn.className = 'action-btn motion-btn';
+      btn.innerHTML = `${motion.name}`;
+      btn.addEventListener('click', () => executeMotion(motion.category, motion.mode, motion.name));
+      grid.appendChild(btn);
+    });
+
+    content.appendChild(grid);
+    section.appendChild(header);
+    section.appendChild(content);
+    container.appendChild(section);
+  });
+}
+
+function buildTrickGrid() {
+  const container = document.getElementById('trickGrid');
+  if (!container) return;
+
+  TRICK_LIST.forEach(trick => {
+    const btn = document.createElement('button');
+    btn.className = 'action-btn trick-btn';
+    btn.innerHTML = `${trick.name}`;
+    btn.addEventListener('click', () => executeTrick(trick.trickName, trick.name));
+    container.appendChild(btn);
+  });
+}
+
+function buildMoveHeadPresets() {
+  const container = document.getElementById('moveHeadPresetGrid');
+  if (!container) return;
+
+  MOVE_HEAD_PRESETS.forEach(preset => {
+    const btn = document.createElement('button');
+    btn.className = 'action-btn move-head-btn';
+    btn.innerHTML = `${preset.name}`;
+    btn.addEventListener('click', () => executeMoveHead(preset.azimuth, preset.elevation, preset.velocity));
+    container.appendChild(btn);
+  });
+}
+
 // ========== 初期化 ==========
 document.addEventListener('DOMContentLoaded', async () => {
   await loadSettings();
   updateUI();
   bindEvents();
+  buildMotionAccordion();
+  buildTrickGrid();
+  buildMoveHeadPresets();
 });
 
 function bindEvents() {
@@ -278,14 +347,36 @@ function bindEvents() {
   // モード切替
   document.getElementById('modeBtn').addEventListener('click', toggleMode);
 
-  // アクションボタン (イベント委譲)
-  document.querySelectorAll('[data-action]').forEach(btn => {
-    btn.addEventListener('click', () => executeAction(btn.dataset.action));
-  });
-
   // 姿勢ボタン (イベント委譲)
   document.querySelectorAll('[data-posture]').forEach(btn => {
     btn.addEventListener('click', () => executePosture(btn.dataset.posture));
+  });
+
+  // MoveHead カスタム設定の開閉
+  document.getElementById('moveHeadCustomToggle').addEventListener('click', () => {
+    const content = document.getElementById('moveHeadCustom');
+    const arrow = document.getElementById('moveHeadCustomArrow');
+    const isOpen = content.classList.toggle('open');
+    arrow.textContent = isOpen ? '▲' : '▼';
+  });
+
+  // MoveHead スライダーのリアルタイム値表示
+  document.getElementById('azimuthSlider').addEventListener('input', (e) => {
+    document.getElementById('azimuthValue').textContent = e.target.value;
+  });
+  document.getElementById('elevationSlider').addEventListener('input', (e) => {
+    document.getElementById('elevationValue').textContent = e.target.value;
+  });
+  document.getElementById('velocitySlider').addEventListener('input', (e) => {
+    document.getElementById('velocityValue').textContent = e.target.value;
+  });
+
+  // MoveHead カスタム実行ボタン
+  document.getElementById('moveHeadExecuteBtn').addEventListener('click', () => {
+    const azimuth = parseFloat(document.getElementById('azimuthSlider').value);
+    const elevation = parseFloat(document.getElementById('elevationSlider').value);
+    const velocity = parseFloat(document.getElementById('velocitySlider').value);
+    executeMoveHead(azimuth, elevation, velocity);
   });
 }
 
