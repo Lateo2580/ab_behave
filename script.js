@@ -511,7 +511,7 @@ async function fetchDevices() {
 async function executeMotion(category, mode, displayName) {
   showStatus('loading', `${displayName} を実行中...`, 'actionStatus');
 
-  const buttons = document.querySelectorAll('.action-btn, .motion-btn');
+  const buttons = document.querySelectorAll('.motion-btn');
   buttons.forEach(btn => btn.disabled = true);
 
   try {
