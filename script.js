@@ -8,6 +8,170 @@ const CRYPTO_DB_NAME = 'aibo_keystore';
 const CRYPTO_STORE_NAME = 'keys';
 const CRYPTO_KEY_ID = 'token_key';
 
+// ========== ふるまいデータ定義 ==========
+const MOTION_GROUPS = [
+  {
+    id: 'greeting',
+    label: '🤝 あいさつ・コミュニケーション',
+    motions: [
+      { category: 'paw', mode: 'BODY_LEFT', name: '左前足でお手' },
+      { category: 'paw', mode: 'BODY_RIGHT', name: '右前足でお手' },
+      { category: 'highFive', mode: 'NONE', name: 'ハイタッチ' },
+      { category: 'highFive', mode: 'BODY_LEFT', name: '左前足でハイタッチ' },
+      { category: 'highFive', mode: 'BODY_RIGHT', name: '右前足でハイタッチ' },
+      { category: 'beckon', mode: 'BODY_LEFT', name: '左前足で手まねき' },
+      { category: 'beckon', mode: 'BODY_RIGHT', name: '右前足で手まねき' },
+      { category: 'agree', mode: 'NONE', name: 'うなずく' },
+      { category: 'nodHead', mode: 'NONE', name: '大きく2回うなずく' },
+      { category: 'greeting', mode: 'NONE', name: 'あいさつ' },
+      { category: 'handUp', mode: 'NONE', name: '両前足あげる' },
+    ]
+  },
+  {
+    id: 'voice',
+    label: '🗣️ 鳴き声・歌',
+    motions: [
+      { category: 'bark', mode: 'NONE', name: '大きくほえる' },
+      { category: 'sing', mode: 'NONE', name: '歌う' },
+      { category: 'yap', mode: 'NONE', name: 'キャンキャン！' },
+      { category: 'woof', mode: 'NONE', name: 'うなる' },
+      { category: 'whine', mode: 'NONE', name: 'キュンとなく' },
+      { category: 'belch', mode: 'NONE', name: 'げっぷ' },
+      { category: 'sneeze', mode: 'NONE', name: 'くしゃみ' },
+      { category: 'sleepTalking', mode: 'NONE', name: '寝ごと' },
+    ]
+  },
+  {
+    id: 'performance',
+    label: '💃 ダンス・運動',
+    motions: [
+      { category: 'dance', mode: 'NONE', name: 'ダンス' },
+      { category: 'stretch', mode: 'NONE', name: 'のび' },
+      { category: 'swing', mode: 'NONE', name: '左右に体を揺らす' },
+      { category: 'sideKick', mode: 'FRONT_LEFT', name: '左前足で横に蹴る' },
+      { category: 'sideKick', mode: 'FRONT_RIGHT', name: '右前足で横に蹴る' },
+      { category: 'sideUp', mode: 'BODY_LEFT', name: '左に転がる' },
+      { category: 'sideUp', mode: 'BODY_RIGHT', name: '右に転がる' },
+      { category: 'heeling', mode: 'NONE', name: 'ヘディング' },
+      { category: 'heeling', mode: 'SPACE_LEFT', name: '左にヘディング' },
+      { category: 'heeling', mode: 'SPACE_RIGHT', name: '右にヘディング' },
+      { category: 'shakeHipsBehind', mode: 'NONE', name: 'お尻を振る' },
+    ]
+  },
+  {
+    id: 'emotion',
+    label: '💕 甘え・感情表現',
+    motions: [
+      { category: 'friendly', mode: 'NONE', name: 'うれしそう' },
+      { category: 'friendlyPalette', mode: 'NONE', name: '遊ぶ仕草' },
+      { category: 'helloILoveYou', mode: 'NONE', name: 'うれしそうにする' },
+      { category: 'infriendly', mode: 'NONE', name: '遊びたそう' },
+      { category: 'kiss', mode: 'NONE', name: 'キス' },
+      { category: 'hug', mode: 'NONE', name: '抱っこせがむ' },
+      { category: 'happy', mode: 'NONE', name: 'よろこぶ' },
+      { category: 'happyOrHot', mode: 'NONE', name: '満足した仕草' },
+      { category: 'overJoyed', mode: 'NONE', name: 'とっても嬉しい' },
+      { category: 'touched', mode: 'SPACE_CENTER', name: '口を開けて目を閉じる' },
+      { category: 'prettyPlease', mode: 'NONE', name: '上目遣い' },
+      { category: 'requestToPlay', mode: 'NONE', name: '遊びに誘う' },
+      { category: 'bad', mode: 'NONE', name: 'いやがる' },
+      { category: 'shakeHead', mode: 'NONE', name: 'かなしそう' },
+      { category: 'peace', mode: 'SPACE_LEFT', name: 'すねて左を向く' },
+      { category: 'peace', mode: 'SPACE_RIGHT', name: 'すねて右を向く' },
+      { category: 'ready', mode: 'NONE', name: '待ちきれなそう' },
+      { category: 'restless', mode: 'NONE', name: 'そわそわ' },
+      { category: 'waiting', mode: 'NONE', name: '退屈そう' },
+      { category: 'tired', mode: 'NONE', name: '疲れた' },
+    ]
+  },
+  {
+    id: 'body',
+    label: '🐾 からだの動き',
+    motions: [
+      { category: 'lickBody', mode: 'BODY_LEFT', name: '左前足を毛づくろい' },
+      { category: 'lickBody', mode: 'BODY_RIGHT', name: '右前足を毛づくろい' },
+      { category: 'lickFace', mode: 'NONE', name: '顔をなめる' },
+      { category: 'washFace', mode: 'NONE', name: '顔を洗う' },
+      { category: 'scratchHead', mode: 'NONE', name: '頭をかく' },
+      { category: 'scratchHead', mode: 'HIND_LEFT', name: '左後足で頭をかく' },
+      { category: 'scratchHead', mode: 'HIND_RIGHT', name: '右後足で頭をかく' },
+      { category: 'scratchFloor', mode: 'NONE', name: '地面を掘る' },
+      { category: 'rubBack', mode: 'NONE', name: '背中を擦りつける' },
+      { category: 'shake', mode: 'NONE', name: 'ぶるぶる' },
+      { category: 'jiggle', mode: 'NONE', name: 'ブルっと震える' },
+      { category: 'shudder', mode: 'NONE', name: '細かく震える' },
+      { category: 'showTummy', mode: 'NONE', name: 'おなかを見せる' },
+      { category: 'marking', mode: 'BOY', name: 'マーキング（男の子）' },
+      { category: 'marking', mode: 'GIRL', name: 'マーキング（女の子）' },
+      { category: 'wiggleEar', mode: 'BODY_BOTH', name: '耳をぴくっと' },
+      { category: 'wiggleEar', mode: 'BODY_LEFT', name: '左耳をぴくっと' },
+      { category: 'wiggleEar', mode: 'BODY_RIGHT', name: '右耳をぴくっと' },
+      { category: 'drawInOnesChin', mode: 'NONE', name: 'あごをひく' },
+      { category: 'bentBack', mode: 'NONE', name: 'へっぴり腰' },
+      { category: 'peePose', mode: 'NONE', name: 'おしっこポーズ' },
+    ]
+  },
+  {
+    id: 'rest',
+    label: '😴 休息・くつろぎ',
+    motions: [
+      { category: 'relax', mode: 'NONE', name: 'くつろぐ' },
+      { category: 'sleep', mode: 'NONE', name: '寝る' },
+      { category: 'dreaming', mode: 'NONE', name: '夢をみる' },
+      { category: 'halfAsleep', mode: 'NONE', name: '寝ぼけ' },
+      { category: 'yawn', mode: 'NONE', name: 'あくび' },
+      { category: 'nod', mode: 'NONE', name: '居眠り' },
+      { category: 'breath', mode: 'NONE', name: 'はあはあ呼吸' },
+      { category: 'sit', mode: 'NONE', name: 'すわる' },
+    ]
+  },
+  {
+    id: 'reaction',
+    label: '🔍 探索・反応',
+    motions: [
+      { category: 'curious', mode: 'NONE', name: '興味' },
+      { category: 'perceive', mode: 'NONE', name: 'はっとする' },
+      { category: 'lookOver', mode: 'NONE', name: 'のぞき込む' },
+      { category: 'lookAroundHead', mode: 'NONE', name: 'きょろきょろ' },
+      { category: 'sniff', mode: 'NONE', name: '目の前を嗅ぐ' },
+      { category: 'sniffDown', mode: 'NONE', name: '下を嗅ぐ' },
+      { category: 'sniffUp', mode: 'NONE', name: '上を嗅ぐ' },
+      { category: 'startled', mode: 'NONE', name: '驚く' },
+      { category: 'startledLittle', mode: 'NONE', name: '少し驚く' },
+      { category: 'gasp', mode: 'NONE', name: '口をパクパク' },
+      { category: 'moveAround', mode: 'NONE', name: 'うろうろ' },
+      { category: 'openMouth', mode: 'NONE', name: '口を開け閉め' },
+      { category: 'openMouth10s', mode: 'NONE', name: '口を10秒開ける' },
+      { category: 'playBiting', mode: 'NONE', name: '甘噛み' },
+      { category: 'drinkWater', mode: 'NONE', name: '水を飲む' },
+      { category: 'eatDryFood', mode: 'NONE', name: 'えさを食べる' },
+      { category: 'throwBone', mode: 'SPACE_CENTER', name: 'アイボーン正面に投げる' },
+      { category: 'throwBone', mode: 'SPACE_LEFT', name: 'アイボーン左に投げる' },
+      { category: 'throwBone', mode: 'SPACE_RIGHT', name: 'アイボーン右に投げる' },
+      { category: 'throwDice', mode: 'SPACE_LEFT', name: 'サイコロ左に投げる' },
+      { category: 'throwDice', mode: 'SPACE_RIGHT', name: 'サイコロ右に投げる' },
+    ]
+  }
+];
+
+const TRICK_LIST = [
+  { trickName: 'aiboSquat', name: 'スクワット' },
+  { trickName: 'happyBirthday', name: 'ハッピーバースデー' },
+  { trickName: 'ifYoureHappyAndYouKnowIt', name: '幸せなら手をたたこう' },
+  { trickName: 'londonBridgeIsFallingDown', name: 'ロンドン橋落ちた' },
+  { trickName: 'radioExerciseNo1', name: 'ラジオ体操第一' },
+  { trickName: 'veryLovelyAibo', name: 'とってもかわいいaibo' },
+  { trickName: 'waltzOfTheFlowers', name: 'くるみ割り人形' },
+];
+
+const MOVE_HEAD_PRESETS = [
+  { name: '正面', azimuth: 0, elevation: 0, velocity: 40 },
+  { name: '左を見る', azimuth: 60, elevation: 0, velocity: 40 },
+  { name: '右を見る', azimuth: -60, elevation: 0, velocity: 40 },
+  { name: '上を見る', azimuth: 0, elevation: 30, velocity: 40 },
+  { name: '下を見る', azimuth: 0, elevation: -30, velocity: 40 },
+];
+
 // ========== 状態管理 ==========
 let currentToken = '';
 let currentDeviceId = '';
@@ -253,20 +417,9 @@ async function fetchDevices() {
 }
 
 // ========== アクション実行 ==========
-const ACTION_MAP = {
-  'paw': { category: 'paw', name: 'お手' },
-  'highFive': { category: 'highFive', name: 'ハイタッチ' },
-  'bark': { category: 'bark', name: 'ほえて' },
-  'friendly': { category: 'friendly', name: 'なかよし' },
-  'dance': { category: 'dance', name: 'ダンス' },
-  'sing': { category: 'sing', name: '歌う' },
-  'stretch': { category: 'stretch', name: '伸び' },
-  'overJoyed': { category: 'overJoyed', name: '大喜び' }
-};
-
 async function executeAction(actionKey) {
-  const action = ACTION_MAP[actionKey];
-  if (!action) return;
+  const action = { category: actionKey, name: actionKey };
+  if (!actionKey) return;
 
   showStatus('loading', `${action.name} を実行中...`, 'actionStatus');
 
