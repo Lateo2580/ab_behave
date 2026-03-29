@@ -93,41 +93,7 @@
             ⏸️ 指示待ちにする
           </button>
         </div>
-        <h2>🎮 ふるまい</h2>
-        <div class="action-grid">
-          <button class="action-btn" data-action="paw">
-            <span class="emoji">🤝</span>
-            お手
-          </button>
-          <button class="action-btn" data-action="highFive">
-            <span class="emoji">✋</span>
-            ハイタッチ
-          </button>
-          <button class="action-btn" data-action="bark">
-            <span class="emoji">🗣️</span>
-            ほえて
-          </button>
-          <button class="action-btn" data-action="friendly">
-            <span class="emoji">💕</span>
-            なかよし
-          </button>
-          <button class="action-btn" data-action="dance">
-            <span class="emoji">💃</span>
-            ダンス
-          </button>
-          <button class="action-btn" data-action="sing">
-            <span class="emoji">🎤</span>
-            歌う
-          </button>
-          <button class="action-btn" data-action="stretch">
-            <span class="emoji">🙆</span>
-            伸び
-          </button>
-          <button class="action-btn" data-action="overJoyed">
-            <span class="emoji">🎉</span>
-            大喜び
-          </button>
-        </div>
+
         <div class="posture-section">
           <h2>🐾 姿勢を変える</h2>
           <div class="action-grid">
@@ -173,6 +139,42 @@
             </button>
           </div>
         </div>
+
+        <div class="motion-section">
+          <h2>🎮 ふるまい</h2>
+          <div id="motionAccordion"></div>
+        </div>
+
+        <div class="trick-section">
+          <h2>🎪 トリック</h2>
+          <p class="trick-note">aiboが覚えているトリックのみ実行できます</p>
+          <div class="action-grid" id="trickGrid"></div>
+        </div>
+
+        <div class="move-head-section">
+          <h2>🐕 首を動かす</h2>
+          <div class="action-grid" id="moveHeadPresetGrid"></div>
+          <div class="move-head-custom-toggle" id="moveHeadCustomToggle">
+            <span>カスタム設定</span>
+            <span id="moveHeadCustomArrow">▼</span>
+          </div>
+          <div class="move-head-custom" id="moveHeadCustom">
+            <div class="slider-group">
+              <label>左右 (Azimuth): <span id="azimuthValue">0</span>°</label>
+              <input type="range" id="azimuthSlider" min="-80" max="80" value="0">
+            </div>
+            <div class="slider-group">
+              <label>上下 (Elevation): <span id="elevationValue">0</span>°</label>
+              <input type="range" id="elevationSlider" min="-40" max="40" value="0">
+            </div>
+            <div class="slider-group">
+              <label>速さ (Velocity): <span id="velocityValue">40</span> deg/s</label>
+              <input type="range" id="velocitySlider" min="10" max="80" value="40">
+            </div>
+            <button class="btn btn-primary move-head-execute-btn" id="moveHeadExecuteBtn">実行</button>
+          </div>
+        </div>
+
         <div class="status" id="actionStatus"></div>
       </div>
     </div>
