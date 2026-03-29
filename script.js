@@ -417,14 +417,10 @@ async function fetchDevices() {
 }
 
 // ========== アクション実行 ==========
-async function executeAction(actionKey) {
-  const action = { category: actionKey, name: actionKey };
-  if (!actionKey) return;
+async function executeMotion(category, mode, displayName) {
+  showStatus('loading', `${displayName} を実行中...`, 'actionStatus');
 
-  showStatus('loading', `${action.name} を実行中...`, 'actionStatus');
-
-  // ボタンを一時的に無効化
-  const buttons = document.querySelectorAll('.action-btn');
+  const buttons = document.querySelectorAll('.action-btn, .motion-btn');
   buttons.forEach(btn => btn.disabled = true);
 
   try {
@@ -436,8 +432,8 @@ async function executeAction(actionKey) {
       },
       body: JSON.stringify({
         arguments: {
-          Category: action.category,
-          Mode: 'NONE'
+          Category: category,
+          Mode: mode
         }
       })
     });
@@ -447,9 +443,84 @@ async function executeAction(actionKey) {
       throw new Error(error.message || `HTTP ${response.status}`);
     }
 
-    const data = await response.json();
-    showStatus('success', `${action.name} を指示しました！`, 'actionStatus');
+    showStatus('success', `${displayName} を指示しました！`, 'actionStatus');
+    setTimeout(() => {
+      document.getElementById('actionStatus').classList.remove('show');
+    }, 3000);
 
+  } catch (error) {
+    showStatus('error', `エラー: ${error.message}`, 'actionStatus');
+  } finally {
+    buttons.forEach(btn => btn.disabled = false);
+  }
+}
+
+async function executeTrick(trickName, displayName) {
+  showStatus('loading', `${displayName} を実行中...`, 'actionStatus');
+
+  const buttons = document.querySelectorAll('.trick-btn');
+  buttons.forEach(btn => btn.disabled = true);
+
+  try {
+    const response = await fetch(`${API_BASE}/devices/${currentDeviceId}/capabilities/play_trick/execute`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${currentToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        arguments: {
+          TrickName: trickName
+        }
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || `HTTP ${response.status}`);
+    }
+
+    showStatus('success', `${displayName} を指示しました！`, 'actionStatus');
+    setTimeout(() => {
+      document.getElementById('actionStatus').classList.remove('show');
+    }, 3000);
+
+  } catch (error) {
+    showStatus('error', `エラー: ${error.message}`, 'actionStatus');
+  } finally {
+    buttons.forEach(btn => btn.disabled = false);
+  }
+}
+
+async function executeMoveHead(azimuth, elevation, velocity) {
+  const displayName = `首を動かす (${azimuth}°, ${elevation}°)`;
+  showStatus('loading', `${displayName} を実行中...`, 'actionStatus');
+
+  const buttons = document.querySelectorAll('.move-head-btn');
+  buttons.forEach(btn => btn.disabled = true);
+
+  try {
+    const response = await fetch(`${API_BASE}/devices/${currentDeviceId}/capabilities/move_head/execute`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${currentToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        arguments: {
+          Azimuth: azimuth,
+          Elevation: elevation,
+          Velocity: velocity
+        }
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || `HTTP ${response.status}`);
+    }
+
+    showStatus('success', `${displayName} を指示しました！`, 'actionStatus');
     setTimeout(() => {
       document.getElementById('actionStatus').classList.remove('show');
     }, 3000);
