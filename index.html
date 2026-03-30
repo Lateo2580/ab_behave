@@ -3,181 +3,228 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self' https://public.api.aibo.com; img-src 'self'; font-src 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; connect-src 'self' https://public.api.aibo.com; img-src 'self'; font-src 'self' https://fonts.gstatic.com;">
   <meta name="referrer" content="no-referrer">
-  <meta name="theme-color" content="#ff6b9d">
+  <meta name="theme-color" content="#FFF8F5">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>ab_behave</title>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>🐕 ab_behave</h1>
-      <p id="headerStatus">設定が必要です</p>
-    </header>
-
-    <!-- 設定カード -->
-    <div class="card">
-      <div class="settings-toggle" id="settingsToggle">
-        <h2 style="margin:0;">⚙️ 設定</h2>
-        <span id="settingsArrow">▼</span>
-      </div>
-      <div class="settings-content" id="settingsContent">
-        <div class="input-group">
-          <label>アクセストークン</label>
-          <input type="password" id="tokenInput" placeholder="トークンを入力">
-        </div>
-        <div class="button-row">
-          <button class="btn btn-primary" id="saveTokenBtn">保存</button>
-          <button class="btn btn-secondary" id="fetchDevicesBtn">接続テスト</button>
-        </div>
-        <div class="device-info" id="deviceInfo" style="display:none;">
-          <strong>接続中:</strong><br>
-          <span id="deviceName">-</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- 未設定時の表示 -->
-    <div class="card" id="setupRequired">
-      <div class="setup-required">
-        <div class="emoji">🔧</div>
-        <p>まず上の「設定」を開いて、<br>アクセストークンを入力してください。</p>
-      </div>
-    </div>
-
-    <!-- タブ付きパネル -->
-    <div class="hidden" id="actionPanel">
-      <!-- タブヘッダー -->
-      <div class="tab-header">
-        <button class="tab-btn active" id="tabInfo">📊 情報取得</button>
-        <button class="tab-btn" id="tabAction">🎮 アクション</button>
-      </div>
-
-      <!-- 情報取得タブ -->
-      <div class="card tab-content active" id="tabContentInfo">
-        <h2>🔋 バッテリー状態</h2>
-        <div class="hungry-status-section">
-          <div class="hungry-status-display" id="hungryStatusDisplay">
-            <div class="hungry-status-icon" id="hungryStatusIcon">🔋</div>
-            <div class="hungry-status-label" id="hungryStatusLabel">未取得</div>
-            <div class="hungry-status-desc" id="hungryStatusDesc">ボタンを押して状態を確認してください</div>
+  <div class="app">
+    <!-- === サイドバー（PC では左カラム、モバイルではヘッダー＋設定パネルとして機能） === -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-top">
+        <!-- アプリタイトル -->
+        <div class="app-header">
+          <h1 class="app-title">🐕 ab_behave</h1>
+          <!-- モバイル用: ステータスチップ＋歯車（PC では sidebar-status に移動） -->
+          <div class="header-actions">
+            <button class="status-chip" id="hungryChip" title="タップで更新">
+              <span class="status-chip-icon" id="hungryChipIcon">🔋</span>
+              <span class="status-chip-label" id="hungryChipLabel">--</span>
+            </button>
+            <button class="status-chip" id="sleepyChip" title="タップで更新">
+              <span class="status-chip-icon" id="sleepyChipIcon">😪</span>
+              <span class="status-chip-label" id="sleepyChipLabel">--</span>
+            </button>
+            <button class="settings-gear" id="settingsGear" aria-label="設定を開く">⚙️</button>
           </div>
-          <button class="btn btn-primary hungry-check-btn" id="hungryCheckBtn">
-            バッテリー状態を確認
+        </div>
+
+        <!-- PC 用: ステータスチップ（モバイルではヘッダー内に表示されるため非表示） -->
+        <div class="sidebar-status" id="sidebarStatus">
+          <button class="status-chip" id="hungryChipDesktop" title="タップで更新">
+            <span class="status-chip-icon" id="hungryChipIconDesktop">🔋</span>
+            <span class="status-chip-label" id="hungryChipLabelDesktop">--</span>
+          </button>
+          <button class="status-chip" id="sleepyChipDesktop" title="タップで更新">
+            <span class="status-chip-icon" id="sleepyChipIconDesktop">😪</span>
+            <span class="status-chip-label" id="sleepyChipLabelDesktop">--</span>
           </button>
         </div>
-        <h2 style="margin-top: 24px;">😪 眠さ状態</h2>
-        <div class="sleepy-status-section">
-          <div class="sleepy-status-display" id="sleepyStatusDisplay">
-            <div class="sleepy-status-icon" id="sleepyStatusIcon">😪</div>
-            <div class="sleepy-status-label" id="sleepyStatusLabel">未取得</div>
-            <div class="sleepy-status-desc" id="sleepyStatusDesc">ボタンを押して状態を確認してください</div>
-          </div>
-          <button class="btn btn-primary sleepy-check-btn" id="sleepyCheckBtn">
-            眠さ状態を確認
-          </button>
-        </div>
-        <div class="status" id="infoStatus"></div>
-      </div>
 
-      <!-- アクション実行タブ -->
-      <div class="card tab-content" id="tabContentAction">
-        <div class="mode-section">
-          <h2>📋 モード切替</h2>
-          <button class="mode-btn standby" id="modeBtn">
+        <!-- モード切替（PC ではサイドバーに表示） -->
+        <div class="sidebar-mode" id="sidebarMode">
+          <button class="mode-btn standby" id="modeBtnDesktop">
             ⏸️ 指示待ちにする
           </button>
         </div>
+      </div>
 
-        <div class="posture-section">
-          <h2>🐾 姿勢を変える</h2>
-          <div class="action-grid">
-            <button class="action-btn posture-btn" data-posture="stand">
-              <span class="emoji">🧍</span>
-              立つ
-            </button>
-            <button class="action-btn posture-btn" data-posture="stand_straight">
-              <span class="emoji">📐</span>
-              まっすぐ立つ
-            </button>
-            <button class="action-btn posture-btn" data-posture="sit">
-              <span class="emoji">🪑</span>
-              すわる
-            </button>
-            <button class="action-btn posture-btn" data-posture="sit_and_raise_both_hands">
-              <span class="emoji">🙌</span>
-              両前足あげる
-            </button>
-            <button class="action-btn posture-btn" data-posture="down">
-              <span class="emoji">⬇️</span>
-              伏せる
-            </button>
-            <button class="action-btn posture-btn" data-posture="crouch">
-              <span class="emoji">🦆</span>
-              しゃがむ
-            </button>
-            <button class="action-btn posture-btn" data-posture="down_and_lengthen_behind">
-              <span class="emoji">😴</span>
-              寝転がる
-            </button>
-            <button class="action-btn posture-btn" data-posture="down_and_shorten_behind">
-              <span class="emoji">🛌</span>
-              足を曲げて寝転がる
-            </button>
-            <button class="action-btn posture-btn" data-posture="sleep">
-              <span class="emoji">💤</span>
-              寝る姿勢
-            </button>
-            <button class="action-btn posture-btn" data-posture="back">
-              <span class="emoji">🔄</span>
-              おなかを見せる
-            </button>
+      <!-- 設定パネル（PC: サイドバー下部 / モバイル: ヘッダー下にスライドダウン） -->
+      <div class="sidebar-bottom">
+        <div class="settings-panel" id="settingsPanel">
+          <div class="settings-panel-header" id="settingsPanelToggle">
+            <span>⚙️ 設定</span>
+            <span class="settings-panel-summary" id="settingsSummary"></span>
+            <span class="settings-arrow" id="settingsPanelArrow">▼</span>
+          </div>
+          <div class="settings-panel-content" id="settingsPanelContent">
+            <div class="input-group">
+              <label>アクセストークン</label>
+              <input type="password" id="tokenInput" placeholder="トークンを入力">
+            </div>
+            <div class="button-row">
+              <button class="btn btn-primary" id="saveTokenBtn">保存</button>
+              <button class="btn btn-secondary" id="fetchDevicesBtn">接続テスト</button>
+            </div>
+            <div class="device-info" id="deviceInfo" style="display:none;">
+              <strong>接続中:</strong><br>
+              <span id="deviceName">-</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- === メインコンテンツ === -->
+    <main class="main-content" id="mainContent">
+      <!-- 未設定時の表示 -->
+      <div class="setup-required" id="setupRequired">
+        <div class="setup-required-emoji">🔧</div>
+        <p>設定を開いて、<br>アクセストークンを入力してください。</p>
+      </div>
+
+      <!-- コマンドセンター（設定完了後に表示） -->
+      <div class="command-center hidden" id="commandCenter">
+        <!-- モード切替（モバイル用 — PC では sidebar-mode に表示） -->
+        <button class="mode-btn standby mobile-mode-btn" id="modeBtnMobile">
+          ⏸️ 指示待ちにする
+        </button>
+
+        <!-- クイックアクションバー -->
+        <div class="quick-actions">
+          <button class="quick-action-btn" data-posture="stand">
+            <span class="quick-action-icon">🧍</span>
+            <span class="quick-action-label">立つ</span>
+          </button>
+          <button class="quick-action-btn" data-posture="sit">
+            <span class="quick-action-icon">🪑</span>
+            <span class="quick-action-label">すわる</span>
+          </button>
+          <button class="quick-action-btn" data-posture="down">
+            <span class="quick-action-icon">⬇️</span>
+            <span class="quick-action-label">伏せる</span>
+          </button>
+          <button class="quick-action-btn" data-action="dance">
+            <span class="quick-action-icon">💃</span>
+            <span class="quick-action-label">ダンス</span>
+          </button>
+        </div>
+
+        <!-- カテゴリリスト -->
+        <div class="category-list-label">すべてのアクション</div>
+
+        <!-- 🐾 姿勢を変える -->
+        <div class="category-card" id="categoryPosture">
+          <div class="category-header" data-category="posture">
+            <span class="category-title">🐾 姿勢を変える</span>
+            <span class="category-count">10種類</span>
+            <span class="category-arrow">▼</span>
+          </div>
+          <div class="category-content" id="categoryPostureContent">
+            <div class="action-grid">
+              <button class="action-btn posture-btn" data-posture="stand">
+                <span class="emoji">🧍</span>立つ
+              </button>
+              <button class="action-btn posture-btn" data-posture="stand_straight">
+                <span class="emoji">📐</span>まっすぐ立つ
+              </button>
+              <button class="action-btn posture-btn" data-posture="sit">
+                <span class="emoji">🪑</span>すわる
+              </button>
+              <button class="action-btn posture-btn" data-posture="sit_and_raise_both_hands">
+                <span class="emoji">🙌</span>両前足あげる
+              </button>
+              <button class="action-btn posture-btn" data-posture="down">
+                <span class="emoji">⬇️</span>伏せる
+              </button>
+              <button class="action-btn posture-btn" data-posture="crouch">
+                <span class="emoji">🦆</span>しゃがむ
+              </button>
+              <button class="action-btn posture-btn" data-posture="down_and_lengthen_behind">
+                <span class="emoji">😴</span>寝転がる
+              </button>
+              <button class="action-btn posture-btn" data-posture="down_and_shorten_behind">
+                <span class="emoji">🛌</span>足を曲げて寝転がる
+              </button>
+              <button class="action-btn posture-btn" data-posture="sleep">
+                <span class="emoji">💤</span>寝る姿勢
+              </button>
+              <button class="action-btn posture-btn" data-posture="back">
+                <span class="emoji">🔄</span>おなかを見せる
+              </button>
+            </div>
           </div>
         </div>
 
-        <div class="motion-section">
-          <h2>🎮 ふるまい</h2>
-          <div id="motionAccordion"></div>
-        </div>
-
-        <div class="trick-section">
-          <h2>🎪 トリック</h2>
-          <p class="trick-note">aiboが覚えているトリックのみ実行できます</p>
-          <div class="action-grid" id="trickGrid"></div>
-        </div>
-
-        <div class="move-head-section">
-          <h2>🐕 首を動かす</h2>
-          <div class="action-grid" id="moveHeadPresetGrid"></div>
-          <div class="move-head-custom-toggle" id="moveHeadCustomToggle">
-            <span>カスタム設定</span>
-            <span id="moveHeadCustomArrow">▼</span>
+        <!-- 🎮 ふるまい -->
+        <div class="category-card" id="categoryMotion">
+          <div class="category-header" data-category="motion">
+            <span class="category-title">🎮 ふるまい</span>
+            <span class="category-count">7カテゴリ</span>
+            <span class="category-arrow">▼</span>
           </div>
-          <div class="move-head-custom" id="moveHeadCustom">
-            <div class="slider-group">
-              <label>左右 (Azimuth): <span id="azimuthValue">0</span>°</label>
-              <input type="range" id="azimuthSlider" min="-80" max="80" value="0">
-            </div>
-            <div class="slider-group">
-              <label>上下 (Elevation): <span id="elevationValue">0</span>°</label>
-              <input type="range" id="elevationSlider" min="-40" max="40" value="0">
-            </div>
-            <div class="slider-group">
-              <label>速さ (Velocity): <span id="velocityValue">40</span> deg/s</label>
-              <input type="range" id="velocitySlider" min="10" max="80" value="40">
-            </div>
-            <button class="btn btn-primary move-head-execute-btn" id="moveHeadExecuteBtn">実行</button>
+          <div class="category-content" id="categoryMotionContent">
+            <div id="motionAccordion"></div>
           </div>
         </div>
 
+        <!-- 🎪 トリック -->
+        <div class="category-card" id="categoryTrick">
+          <div class="category-header" data-category="trick">
+            <span class="category-title">🎪 トリック</span>
+            <span class="category-count">7種類</span>
+            <span class="category-arrow">▼</span>
+          </div>
+          <div class="category-content" id="categoryTrickContent">
+            <p class="trick-note">aiboが覚えているトリックのみ実行できます</p>
+            <div class="action-grid" id="trickGrid"></div>
+          </div>
+        </div>
+
+        <!-- 🐕 首を動かす -->
+        <div class="category-card" id="categoryMoveHead">
+          <div class="category-header" data-category="moveHead">
+            <span class="category-title">🐕 首を動かす</span>
+            <span class="category-count">5+カスタム</span>
+            <span class="category-arrow">▼</span>
+          </div>
+          <div class="category-content" id="categoryMoveHeadContent">
+            <div class="action-grid" id="moveHeadPresetGrid"></div>
+            <div class="move-head-custom-toggle" id="moveHeadCustomToggle">
+              <span>カスタム設定</span>
+              <span id="moveHeadCustomArrow">▼</span>
+            </div>
+            <div class="move-head-custom" id="moveHeadCustom">
+              <div class="slider-group">
+                <label>左右 (Azimuth): <span id="azimuthValue">0</span>°</label>
+                <input type="range" id="azimuthSlider" min="-80" max="80" value="0">
+              </div>
+              <div class="slider-group">
+                <label>上下 (Elevation): <span id="elevationValue">0</span>°</label>
+                <input type="range" id="elevationSlider" min="-40" max="40" value="0">
+              </div>
+              <div class="slider-group">
+                <label>速さ (Velocity): <span id="velocityValue">40</span> deg/s</label>
+                <input type="range" id="velocitySlider" min="10" max="80" value="40">
+              </div>
+              <button class="btn btn-primary move-head-execute-btn" id="moveHeadExecuteBtn">実行</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ステータスメッセージ -->
         <div class="status" id="actionStatus"></div>
       </div>
-    </div>
+    </main>
   </div>
 
   <script src="script.js"></script>
