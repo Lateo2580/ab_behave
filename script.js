@@ -449,7 +449,7 @@ function toggleSettingsPanel() {
   const content = document.getElementById('settingsPanelContent');
   const arrow = document.getElementById('settingsPanelArrow');
   const isShow = content.classList.toggle('show');
-  arrow.textContent = isShow ? '▲' : '▼';
+  arrow.textContent = isShow ? '▼' : '▲';
 }
 
 async function saveToken() {

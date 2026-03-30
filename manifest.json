@@ -4,8 +4,8 @@
   "description": "ふるまいを指示するリモコンアプリ",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#667eea",
-  "theme_color": "#ff6b9d",
+  "background_color": "#FFF8F5",
+  "theme_color": "#FFF8F5",
   "orientation": "portrait",
   "icons": [
     {

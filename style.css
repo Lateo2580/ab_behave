@@ -246,17 +246,16 @@ body::before {
   gap: 8px;
 }
 
+.settings-arrow {
+  font-size: 0.75rem;
+  color: var(--md-outline);
+}
+
 .settings-panel-summary {
   flex: 1;
   text-align: right;
   font-size: 0.78rem;
   color: var(--md-outline);
-}
-
-.settings-arrow {
-  font-size: 0.75rem;
-  color: var(--md-outline);
-  transition: transform var(--md-duration-medium) var(--md-ease-emphasized);
 }
 
 .settings-panel-content {
@@ -592,15 +591,32 @@ body::before {
 }
 
 .category-content {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.4s var(--md-ease-emphasized);
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--md-duration-medium) var(--md-ease-emphasized);
 }
 
 .category-card.open .category-content {
-  max-height: 3000px;
-  padding: 0 18px 18px;
-  transition: max-height 0.6s var(--md-ease-standard);
+  grid-template-rows: 1fr;
+  transition: grid-template-rows var(--md-duration-long) var(--md-ease-standard);
+}
+
+.category-content > * {
+  overflow: hidden;
+}
+
+.category-content-inner {
+  padding: 0 18px;
+  opacity: 0;
+  transition: opacity 0.15s var(--md-ease-standard),
+              padding 0.2s var(--md-ease-standard);
+}
+
+.category-card.open .category-content-inner {
+  padding: 12px 18px 18px;
+  opacity: 1;
+  transition: opacity 0.3s 0.1s var(--md-ease-standard),
+              padding 0.3s var(--md-ease-standard);
 }
 
 .action-grid {
@@ -615,12 +631,17 @@ body::before {
   border: none;
   border-radius: var(--md-shape-xl);
   padding: 18px 12px;
+  min-height: 90px;
   font-size: 12px;
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   transition: transform var(--md-duration-short) var(--md-ease-spring),
               background var(--md-duration-short) var(--md-ease-standard);
 }

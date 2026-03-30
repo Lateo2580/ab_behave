@@ -1,4 +1,4 @@
-const CACHE_NAME = 'aibo-remote-v3';
+const CACHE_NAME = 'aibo-remote-v6';
 const urlsToCache = [
   './',
   './index.html',
