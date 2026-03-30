@@ -332,27 +332,35 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 function bindEvents() {
   // 設定パネル
-  document.getElementById('settingsToggle').addEventListener('click', toggleSettings);
+  document.getElementById('settingsPanelToggle').addEventListener('click', toggleSettingsPanel);
+  document.getElementById('settingsGear').addEventListener('click', toggleSettingsPanel);
   document.getElementById('saveTokenBtn').addEventListener('click', saveToken);
   document.getElementById('fetchDevicesBtn').addEventListener('click', fetchDevices);
 
-  // タブ切替
-  document.getElementById('tabInfo').addEventListener('click', () => switchTab('info'));
-  document.getElementById('tabAction').addEventListener('click', () => switchTab('action'));
+  // ステータスチップ（モバイル + PC）
+  document.getElementById('hungryChip').addEventListener('click', chipCheckHungry);
+  document.getElementById('sleepyChip').addEventListener('click', chipCheckSleepy);
+  document.getElementById('hungryChipDesktop').addEventListener('click', chipCheckHungry);
+  document.getElementById('sleepyChipDesktop').addEventListener('click', chipCheckSleepy);
 
-  // 情報取得
-  document.getElementById('hungryCheckBtn').addEventListener('click', checkHungryStatus);
-  document.getElementById('sleepyCheckBtn').addEventListener('click', checkSleepyStatus);
+  // モード切替（モバイル + PC）
+  document.getElementById('modeBtnMobile').addEventListener('click', toggleMode);
+  document.getElementById('modeBtnDesktop').addEventListener('click', toggleMode);
 
-  // モード切替
-  document.getElementById('modeBtn').addEventListener('click', toggleMode);
-
-  // 姿勢ボタン (イベント委譲)
+  // 姿勢ボタン (カテゴリ内 — クイックアクションボタンは除外)
   document.querySelectorAll('[data-posture]').forEach(btn => {
-    btn.addEventListener('click', () => executePosture(btn.dataset.posture));
+    if (!btn.classList.contains('quick-action-btn')) {
+      btn.addEventListener('click', () => executePosture(btn.dataset.posture));
+    }
   });
 
-  // MoveHead カスタム設定の開閉
+  // カテゴリ展開
+  bindCategoryToggle();
+
+  // クイックアクション
+  bindQuickActions();
+
+  // MoveHead カスタム設定
   document.getElementById('moveHeadCustomToggle').addEventListener('click', () => {
     const content = document.getElementById('moveHeadCustom');
     const arrow = document.getElementById('moveHeadCustomArrow');
@@ -360,7 +368,6 @@ function bindEvents() {
     arrow.textContent = isOpen ? '▲' : '▼';
   });
 
-  // MoveHead スライダーのリアルタイム値表示
   document.getElementById('azimuthSlider').addEventListener('input', (e) => {
     document.getElementById('azimuthValue').textContent = e.target.value;
   });
@@ -371,7 +378,6 @@ function bindEvents() {
     document.getElementById('velocityValue').textContent = e.target.value;
   });
 
-  // MoveHead カスタム実行ボタン
   document.getElementById('moveHeadExecuteBtn').addEventListener('click', () => {
     const azimuth = parseFloat(document.getElementById('azimuthSlider').value);
     const elevation = parseFloat(document.getElementById('elevationSlider').value);
@@ -409,23 +415,39 @@ function updateUI() {
   const isReady = currentToken && currentDeviceId;
 
   document.getElementById('setupRequired').classList.toggle('hidden', isReady);
-  document.getElementById('actionPanel').classList.toggle('hidden', !isReady);
-  document.getElementById('headerStatus').textContent = isReady
-    ? `${currentDeviceName || 'aibo'} と接続中`
-    : '設定が必要です';
+  document.getElementById('commandCenter').classList.toggle('hidden', !isReady);
 
+  // 設定パネルのサマリー表示
+  const summary = document.getElementById('settingsSummary');
+  if (currentDeviceName) {
+    summary.textContent = `接続中: ${currentDeviceName}`;
+  } else if (currentToken) {
+    summary.textContent = '未接続';
+  } else {
+    summary.textContent = '';
+  }
+
+  // デバイス情報
   if (currentDeviceId) {
     document.getElementById('deviceInfo').style.display = 'block';
     document.getElementById('deviceName').textContent = currentDeviceName || currentDeviceId;
   } else {
     document.getElementById('deviceInfo').style.display = 'none';
   }
+
+  // 未設定時は設定パネルを自動展開
+  if (!isReady) {
+    const content = document.getElementById('settingsPanelContent');
+    if (!content.classList.contains('show')) {
+      content.classList.add('show');
+    }
+  }
 }
 
 // ========== 設定関連 ==========
-function toggleSettings() {
-  const content = document.getElementById('settingsContent');
-  const arrow = document.getElementById('settingsArrow');
+function toggleSettingsPanel() {
+  const content = document.getElementById('settingsPanelContent');
+  const arrow = document.getElementById('settingsPanelArrow');
   const isShow = content.classList.toggle('show');
   arrow.textContent = isShow ? '▲' : '▼';
 }
@@ -505,6 +527,31 @@ async function fetchDevices() {
   } catch (error) {
     alert(`接続エラー: ${error.message}`);
   }
+}
+
+// ========== カテゴリ展開 ==========
+function bindCategoryToggle() {
+  document.querySelectorAll('.category-header').forEach(header => {
+    header.addEventListener('click', () => {
+      const card = header.closest('.category-card');
+      card.classList.toggle('open');
+    });
+  });
+}
+
+// ========== クイックアクション ==========
+function bindQuickActions() {
+  document.querySelectorAll('.quick-action-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const posture = btn.dataset.posture;
+      const action = btn.dataset.action;
+      if (posture) {
+        executePosture(posture);
+      } else if (action === 'dance') {
+        executeMotion('dance', 'NONE', 'ダンス');
+      }
+    });
+  });
 }
 
 // ========== アクション実行 ==========
@@ -681,23 +728,30 @@ async function executePosture(postureKey) {
 
 // ========== モード切替 ==========
 function updateModeButton() {
-  const btn = document.getElementById('modeBtn');
-  if (isStandbyMode) {
-    btn.textContent = '▶️ 指示待ちを解除する';
-    btn.className = 'mode-btn normal';
-  } else {
-    btn.textContent = '⏸️ 指示待ちにする';
-    btn.className = 'mode-btn standby';
-  }
+  const buttons = [document.getElementById('modeBtnMobile'), document.getElementById('modeBtnDesktop')];
+  buttons.forEach(btn => {
+    if (!btn) return;
+    if (isStandbyMode) {
+      btn.textContent = '▶️ 指示待ちを解除する';
+      btn.className = btn.className.includes('mobile-mode-btn')
+        ? 'mode-btn normal mobile-mode-btn'
+        : 'mode-btn normal';
+    } else {
+      btn.textContent = '⏸️ 指示待ちにする';
+      btn.className = btn.className.includes('mobile-mode-btn')
+        ? 'mode-btn standby mobile-mode-btn'
+        : 'mode-btn standby';
+    }
+  });
 }
 
 async function toggleMode() {
   const newMode = isStandbyMode ? 'NORMAL' : 'DEVELOPMENT';
   const label = isStandbyMode ? '指示待ち解除' : '指示待ち';
-  const modeBtn = document.getElementById('modeBtn');
+  const modeButtons = [document.getElementById('modeBtnMobile'), document.getElementById('modeBtnDesktop')];
 
   showStatus('loading', `${label}に切り替え中...`, 'actionStatus');
-  modeBtn.disabled = true;
+  modeButtons.forEach(btn => { if (btn) btn.disabled = true; });
 
   try {
     const response = await fetch(`${API_BASE}/devices/${currentDeviceId}/capabilities/set_mode/execute`, {
@@ -729,7 +783,7 @@ async function toggleMode() {
   } catch (error) {
     showStatus('error', `エラー: ${error.message}`, 'actionStatus');
   } finally {
-    modeBtn.disabled = false;
+    modeButtons.forEach(btn => { if (btn) btn.disabled = false; });
   }
 }
 
@@ -737,20 +791,6 @@ function showStatus(type, message, targetId = 'actionStatus') {
   const statusEl = document.getElementById(targetId);
   statusEl.className = `status show ${type}`;
   statusEl.textContent = message;
-}
-
-// ========== タブ切替 ==========
-function switchTab(tabName) {
-  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-
-  if (tabName === 'info') {
-    document.getElementById('tabInfo').classList.add('active');
-    document.getElementById('tabContentInfo').classList.add('active');
-  } else {
-    document.getElementById('tabAction').classList.add('active');
-    document.getElementById('tabContentAction').classList.add('active');
-  }
 }
 
 // ========== バッテリー状態取得 (HungryStatus) ==========
@@ -762,13 +802,23 @@ const HUNGRY_STATUS_MAP = {
   'famished':  { icon: '🪫', label: 'バッテリー切れ', desc: '移動もできないほどバッテリー残量が少ないです' }
 };
 
-async function checkHungryStatus() {
-  const checkBtn = document.getElementById('hungryCheckBtn');
-  checkBtn.disabled = true;
-  showStatus('loading', 'バッテリー状態を取得中...', 'infoStatus');
+function updateHungryChip(energy) {
+  const info = HUNGRY_STATUS_MAP[energy] || { icon: '❓', label: energy };
+  // モバイル用チップ
+  document.getElementById('hungryChipIcon').textContent = info.icon;
+  document.getElementById('hungryChipLabel').textContent = info.label;
+  document.getElementById('hungryChip').className = `status-chip status-${energy}`;
+  // PC 用チップ
+  document.getElementById('hungryChipIconDesktop').textContent = info.icon;
+  document.getElementById('hungryChipLabelDesktop').textContent = info.label;
+  document.getElementById('hungryChipDesktop').className = `status-chip status-${energy}`;
+}
+
+async function chipCheckHungry() {
+  const chips = [document.getElementById('hungryChip'), document.getElementById('hungryChipDesktop')];
+  chips.forEach(c => c.classList.add('loading'));
 
   try {
-    // Step 1: Execute hungry_status
     const execResponse = await fetch(`${API_BASE}/devices/${currentDeviceId}/capabilities/hungry_status/execute`, {
       method: 'POST',
       headers: {
@@ -784,29 +834,71 @@ async function checkHungryStatus() {
     }
 
     const execData = await execResponse.json();
-    const executionId = execData.executionId;
-
-    // Step 2: Poll for result
-    const result = await pollExecution(executionId);
+    const result = await pollExecution(execData.executionId);
 
     if (result.status === 'SUCCEEDED' && result.result && result.result.hungry_status) {
-      const energy = result.result.hungry_status.energy;
-      updateHungryStatusDisplay(energy);
-      showStatus('success', 'バッテリー状態を取得しました！', 'infoStatus');
-
-      setTimeout(() => {
-        document.getElementById('infoStatus').classList.remove('show');
-      }, 3000);
-    } else if (result.status === 'FAILED') {
-      throw new Error('実行に失敗しました');
+      updateHungryChip(result.result.hungry_status.energy);
     } else {
-      throw new Error(`予期しないステータス: ${result.status}`);
+      throw new Error('取得失敗');
+    }
+  } catch (error) {
+    chips.forEach(c => { c.className = 'status-chip error'; });
+    showStatus('error', `バッテリー取得エラー: ${error.message}`, 'actionStatus');
+  } finally {
+    chips.forEach(c => c.classList.remove('loading'));
+  }
+}
+
+// ========== 眠さ状態取得 (SleepyStatus) ==========
+const SLEEPY_STATUS_MAP = {
+  'no_sleepy':  { icon: '😆', label: '元気', desc: 'まったく眠くなく、元気に活動中' },
+  'boring':     { icon: '😐', label: '退屈', desc: '刺激がなく、退屈な状態' },
+  'sleepy':     { icon: '😪', label: '眠い', desc: '眠くなってきた状態' },
+  'very_sleepy':{ icon: '😴', label: 'とても眠い', desc: 'かなり眠く、もう少しで寝そうな状態' }
+};
+
+function updateSleepyChip(status) {
+  const info = SLEEPY_STATUS_MAP[status] || { icon: '❓', label: status };
+  document.getElementById('sleepyChipIcon').textContent = info.icon;
+  document.getElementById('sleepyChipLabel').textContent = info.label;
+  document.getElementById('sleepyChip').className = `status-chip status-${status}`;
+  document.getElementById('sleepyChipIconDesktop').textContent = info.icon;
+  document.getElementById('sleepyChipLabelDesktop').textContent = info.label;
+  document.getElementById('sleepyChipDesktop').className = `status-chip status-${status}`;
+}
+
+async function chipCheckSleepy() {
+  const chips = [document.getElementById('sleepyChip'), document.getElementById('sleepyChipDesktop')];
+  chips.forEach(c => c.classList.add('loading'));
+
+  try {
+    const execResponse = await fetch(`${API_BASE}/devices/${currentDeviceId}/capabilities/sleepy_status/execute`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${currentToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({})
+    });
+
+    if (!execResponse.ok) {
+      const error = await execResponse.json();
+      throw new Error(error.message || `HTTP ${execResponse.status}`);
     }
 
+    const execData = await execResponse.json();
+    const result = await pollExecution(execData.executionId);
+
+    if (result.status === 'SUCCEEDED' && result.result && result.result.sleepy_status) {
+      updateSleepyChip(result.result.sleepy_status.status);
+    } else {
+      throw new Error('取得失敗');
+    }
   } catch (error) {
-    showStatus('error', `エラー: ${error.message}`, 'infoStatus');
+    chips.forEach(c => { c.className = 'status-chip error'; });
+    showStatus('error', `眠さ取得エラー: ${error.message}`, 'actionStatus');
   } finally {
-    checkBtn.disabled = false;
+    chips.forEach(c => c.classList.remove('loading'));
   }
 }
 
@@ -831,84 +923,6 @@ async function pollExecution(executionId, maxRetries = 10, interval = 1000) {
   }
 
   throw new Error('タイムアウト: 結果を取得できませんでした');
-}
-
-function updateHungryStatusDisplay(energy) {
-  const info = HUNGRY_STATUS_MAP[energy] || { icon: '❓', label: energy, desc: '不明な状態です' };
-
-  document.getElementById('hungryStatusIcon').textContent = info.icon;
-  document.getElementById('hungryStatusLabel').textContent = info.label;
-  document.getElementById('hungryStatusDesc').textContent = info.desc;
-
-  const display = document.getElementById('hungryStatusDisplay');
-  display.className = `hungry-status-display status-${energy}`;
-}
-
-// ========== 眠さ状態取得 (SleepyStatus) ==========
-const SLEEPY_STATUS_MAP = {
-  'no_sleepy':  { icon: '😆', label: '元気', desc: 'まったく眠くなく、元気に活動中' },
-  'boring':     { icon: '😐', label: '退屈', desc: '刺激がなく、退屈な状態' },
-  'sleepy':     { icon: '😪', label: '眠い', desc: '眠くなってきた状態' },
-  'very_sleepy':{ icon: '😴', label: 'とても眠い', desc: 'かなり眠く、もう少しで寝そうな状態' }
-};
-
-async function checkSleepyStatus() {
-  const checkBtn = document.getElementById('sleepyCheckBtn');
-  checkBtn.disabled = true;
-  showStatus('loading', '眠さ状態を取得中...', 'infoStatus');
-
-  try {
-    // Step 1: Execute sleepy_status
-    const execResponse = await fetch(`${API_BASE}/devices/${currentDeviceId}/capabilities/sleepy_status/execute`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${currentToken}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({})
-    });
-
-    if (!execResponse.ok) {
-      const error = await execResponse.json();
-      throw new Error(error.message || `HTTP ${execResponse.status}`);
-    }
-
-    const execData = await execResponse.json();
-    const executionId = execData.executionId;
-
-    // Step 2: Poll for result
-    const result = await pollExecution(executionId);
-
-    if (result.status === 'SUCCEEDED' && result.result && result.result.sleepy_status) {
-      const status = result.result.sleepy_status.status;
-      updateSleepyStatusDisplay(status);
-      showStatus('success', '眠さ状態を取得しました！', 'infoStatus');
-
-      setTimeout(() => {
-        document.getElementById('infoStatus').classList.remove('show');
-      }, 3000);
-    } else if (result.status === 'FAILED') {
-      throw new Error('実行に失敗しました');
-    } else {
-      throw new Error(`予期しないステータス: ${result.status}`);
-    }
-
-  } catch (error) {
-    showStatus('error', `エラー: ${error.message}`, 'infoStatus');
-  } finally {
-    checkBtn.disabled = false;
-  }
-}
-
-function updateSleepyStatusDisplay(status) {
-  const info = SLEEPY_STATUS_MAP[status] || { icon: '❓', label: status, desc: '不明な状態です' };
-
-  document.getElementById('sleepyStatusIcon').textContent = info.icon;
-  document.getElementById('sleepyStatusLabel').textContent = info.label;
-  document.getElementById('sleepyStatusDesc').textContent = info.desc;
-
-  const display = document.getElementById('sleepyStatusDisplay');
-  display.className = `sleepy-status-display status-${status}`;
 }
 
 // ========== Service Worker登録 ==========
