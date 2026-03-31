@@ -350,6 +350,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // 文字サイズセグメントを初期化
   updateFontSizeSegments(document.documentElement.dataset.fontSize || 'normal');
+
+  // 最近使った操作を表示
+  renderRecentActions();
 });
 
 function bindEvents() {
@@ -635,6 +638,7 @@ async function executeMotion(category, mode, displayName) {
     }
 
     showStatus('success', `${displayName} を指示しました！`, 'actionStatus');
+    recordAction(`motion:${category}:${mode}`, displayName, '🎮');
     setTimeout(() => {
       document.getElementById('actionStatus').classList.remove('show');
     }, 3000);
@@ -672,6 +676,7 @@ async function executeTrick(trickName, displayName) {
     }
 
     showStatus('success', `${displayName} を指示しました！`, 'actionStatus');
+    recordAction(`trick:${trickName}`, displayName, '🎪');
     setTimeout(() => {
       document.getElementById('actionStatus').classList.remove('show');
     }, 3000);
@@ -712,6 +717,10 @@ async function executeMoveHead(azimuth, elevation, velocity) {
     }
 
     showStatus('success', `${displayName} を指示しました！`, 'actionStatus');
+    const matchedPreset = MOVE_HEAD_PRESETS.find(p => p.azimuth === azimuth && p.elevation === elevation);
+    if (matchedPreset) {
+      recordAction(`moveHead:preset:${matchedPreset.name}`, matchedPreset.name, '🐕');
+    }
     setTimeout(() => {
       document.getElementById('actionStatus').classList.remove('show');
     }, 3000);
@@ -767,6 +776,8 @@ async function executePosture(postureKey) {
 
     const data = await response.json();
     showStatus('success', `${posture.name} を指示しました！`, 'actionStatus');
+    const postureEmojis = { stand:'🧍', stand_straight:'📐', sit:'🪑', sit_and_raise_both_hands:'🙌', down:'⬇️', crouch:'🦆', down_and_lengthen_behind:'😴', down_and_shorten_behind:'🛌', sleep:'💤', back:'🔄' };
+    recordAction(`posture:${postureKey}`, posture.name, postureEmojis[postureKey] || '🐾');
 
     setTimeout(() => {
       document.getElementById('actionStatus').classList.remove('show');
@@ -886,6 +897,88 @@ function showStatus(type, message, targetId = 'actionStatus') {
   const statusEl = document.getElementById(targetId);
   statusEl.className = `status show ${type}`;
   statusEl.textContent = message;
+}
+
+// ========== 最近使った操作 ==========
+const STORAGE_KEY_HISTORY = 'aibo_action_history';
+
+function recordAction(actionKey, displayName, emoji) {
+  let history = {};
+  try {
+    history = JSON.parse(localStorage.getItem(STORAGE_KEY_HISTORY) || '{}');
+  } catch { /* ignore */ }
+
+  if (!history[actionKey]) {
+    history[actionKey] = { count: 0, lastUsed: 0, name: displayName, emoji: emoji || '' };
+  }
+  history[actionKey].count += 1;
+  history[actionKey].lastUsed = Date.now();
+  history[actionKey].name = displayName;
+  if (emoji) history[actionKey].emoji = emoji;
+
+  localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(history));
+  renderRecentActions();
+}
+
+function getRecentActions(limit = 4) {
+  let history = {};
+  try {
+    history = JSON.parse(localStorage.getItem(STORAGE_KEY_HISTORY) || '{}');
+  } catch { return []; }
+
+  return Object.entries(history)
+    .sort((a, b) => b[1].lastUsed - a[1].lastUsed)
+    .slice(0, limit)
+    .map(([key, data]) => ({ key, ...data }));
+}
+
+function renderRecentActions() {
+  const container = document.getElementById('recentActions');
+  const scroll = document.getElementById('recentActionsScroll');
+  if (!container || !scroll) return;
+
+  const actions = getRecentActions(4);
+  if (actions.length === 0) {
+    container.classList.add('hidden');
+    return;
+  }
+
+  container.classList.remove('hidden');
+  scroll.innerHTML = '';
+
+  actions.forEach(action => {
+    const chip = document.createElement('button');
+    chip.className = 'recent-action-chip';
+    chip.innerHTML = `<span class="chip-emoji">${action.emoji}</span>${action.name}`;
+    chip.addEventListener('click', () => executeRecentAction(action.key));
+    scroll.appendChild(chip);
+  });
+}
+
+function executeRecentAction(actionKey) {
+  const parts = actionKey.split(':');
+  const type = parts[0];
+
+  if (type === 'posture') {
+    executePosture(parts[1]);
+  } else if (type === 'motion') {
+    const category = parts[1];
+    const mode = parts[2];
+    const history = JSON.parse(localStorage.getItem(STORAGE_KEY_HISTORY) || '{}');
+    const name = history[actionKey]?.name || category;
+    executeMotion(category, mode, name);
+  } else if (type === 'trick') {
+    const trickName = parts[1];
+    const history = JSON.parse(localStorage.getItem(STORAGE_KEY_HISTORY) || '{}');
+    const name = history[actionKey]?.name || trickName;
+    executeTrick(trickName, name);
+  } else if (type === 'moveHead' && parts[1] === 'preset') {
+    const presetName = parts[2];
+    const preset = MOVE_HEAD_PRESETS.find(p => p.name === presetName);
+    if (preset) {
+      executeMoveHead(preset.azimuth, preset.elevation, preset.velocity);
+    }
+  }
 }
 
 // ========== バッテリー状態取得 (HungryStatus) ==========
