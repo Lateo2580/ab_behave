@@ -63,6 +63,46 @@
   --md-elevation-3: color-mix(in srgb, var(--md-primary) 11%, var(--md-surface));
 }
 
+/* Dark theme (Warm Dark) */
+[data-theme="dark"] {
+  --md-primary: #FFB599;
+  --md-on-primary: #3A1507;
+  --md-primary-container: #5C2D1A;
+  --md-on-primary-container: #FFDED3;
+
+  --md-secondary: #A8D5AB;
+  --md-on-secondary: #1A3620;
+  --md-secondary-container: #2A3D2D;
+  --md-on-secondary-container: #C8E6CB;
+
+  --md-tertiary: #E0C088;
+  --md-on-tertiary: #352208;
+  --md-tertiary-container: #4A3820;
+  --md-on-tertiary-container: #F0DEB8;
+
+  --md-error: #FFB4AB;
+  --md-error-container: #93000A;
+
+  --md-surface: #231917;
+  --md-surface-dim: #1E1512;
+  --md-surface-container-lowest: #1E1512;
+  --md-surface-container-low: #2D211B;
+  --md-surface-container: #352A24;
+  --md-surface-container-high: #3D2E27;
+  --md-surface-container-highest: #4A3B33;
+  --md-on-surface: #FFEDE6;
+  --md-on-surface-variant: #D8C2B8;
+  --md-inverse-surface: #FFEDE6;
+  --md-inverse-on-surface: #392E28;
+
+  --md-outline: #6B5B53;
+  --md-outline-variant: #4A3B33;
+
+  --md-elevation-1: color-mix(in srgb, var(--md-primary) 5%, var(--md-surface));
+  --md-elevation-2: color-mix(in srgb, var(--md-primary) 8%, var(--md-surface));
+  --md-elevation-3: color-mix(in srgb, var(--md-primary) 11%, var(--md-surface));
+}
+
 /* ========== 1. Reset & Base ========== */
 * {
   box-sizing: border-box;
@@ -90,6 +130,19 @@ body::before {
     radial-gradient(ellipse 80% 100% at 90% 100%, color-mix(in srgb, var(--md-secondary-container) 30%, transparent) 0%, transparent 50%);
   pointer-events: none;
   z-index: -1;
+}
+
+[data-theme="dark"] body::before {
+  background:
+    radial-gradient(ellipse 120% 80% at 20% 0%, color-mix(in srgb, var(--md-primary-container) 20%, transparent) 0%, transparent 60%),
+    radial-gradient(ellipse 80% 100% at 90% 100%, color-mix(in srgb, var(--md-secondary-container) 15%, transparent) 0%, transparent 50%);
+}
+
+body.theme-transitioning,
+body.theme-transitioning * {
+  transition: background-color 0.3s var(--md-ease-standard),
+              color 0.3s var(--md-ease-standard),
+              border-color 0.3s var(--md-ease-standard) !important;
 }
 
 .app {
@@ -211,6 +264,26 @@ body::before {
 }
 
 .settings-gear:active {
+  transform: scale(0.9);
+}
+
+/* Theme toggle button */
+.theme-toggle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--md-surface-container);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  transition: transform var(--md-duration-short) var(--md-ease-spring),
+              background var(--md-duration-short) var(--md-ease-standard);
+}
+
+.theme-toggle:active {
   transform: scale(0.9);
 }
 
