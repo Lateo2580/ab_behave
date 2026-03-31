@@ -505,7 +505,7 @@ async function saveToken() {
   // マスク文字列のままの場合は変更なしとみなす
   if (!token || (token === '********' && input.dataset.hasToken === 'true')) {
     if (!token) {
-      alert('トークンを入力してください');
+      showStatus('error', 'トークンを入力してください', 'actionStatus');
     }
     return;
   }
@@ -518,7 +518,7 @@ async function saveToken() {
     localStorage.setItem(STORAGE_KEY_TOKEN, encrypted.data);
     localStorage.setItem(STORAGE_KEY_TOKEN_IV, encrypted.iv);
   } catch {
-    alert('暗号化に失敗しました。ブラウザが Web Crypto API に対応しているか確認してください。');
+    showStatus('error', '暗号化に失敗しました。ブラウザが Web Crypto API に対応しているか確認してください。', 'actionStatus');
     return;
   }
 
@@ -533,12 +533,15 @@ async function saveToken() {
   input.dataset.hasToken = 'true';
 
   updateUI();
-  alert('トークンを保存しました。\n「接続テスト」を押してaiboと接続してください。');
+  showStatus('success', 'トークンを保存しました。「接続テスト」を押してaiboと接続してください。', 'actionStatus');
+  setTimeout(() => {
+    document.getElementById('actionStatus').classList.remove('show');
+  }, 5000);
 }
 
 async function fetchDevices() {
   if (!currentToken) {
-    alert('先にトークンを保存してください');
+    showStatus('error', '先にトークンを保存してください', 'actionStatus');
     return;
   }
 
@@ -555,7 +558,7 @@ async function fetchDevices() {
     const data = await response.json();
 
     if (!data.devices || data.devices.length === 0) {
-      alert('aiboが見つかりませんでした。\nトークンを確認してください。');
+      showStatus('error', 'aiboが見つかりませんでした。トークンを確認してください。', 'actionStatus');
       return;
     }
 
@@ -568,10 +571,13 @@ async function fetchDevices() {
     localStorage.setItem(STORAGE_KEY_DEVICE_NAME, currentDeviceName);
 
     updateUI();
-    alert(`${currentDeviceName} と接続しました！`);
+    showStatus('success', `${currentDeviceName} と接続しました！`, 'actionStatus');
+    setTimeout(() => {
+      document.getElementById('actionStatus').classList.remove('show');
+    }, 3000);
 
   } catch (error) {
-    alert(`接続エラー: ${error.message}`);
+    showStatus('error', `接続エラー: ${error.message}`, 'actionStatus');
   }
 }
 
