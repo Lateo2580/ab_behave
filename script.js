@@ -1,3 +1,13 @@
+// ========== FOUC 防止: テーマ・文字サイズを即時適用 ==========
+(function () {
+  const theme = localStorage.getItem('aibo_theme') ||
+    (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.dataset.theme = theme;
+
+  const fontSize = localStorage.getItem('aibo_font_size') || 'normal';
+  document.documentElement.dataset.fontSize = fontSize;
+})();
+
 // ========== 定数 ==========
 const API_BASE = 'https://public.api.aibo.com/v1';
 const STORAGE_KEY_TOKEN = 'aibo_token';
@@ -328,9 +338,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   buildMotionAccordion();
   buildTrickGrid();
   buildMoveHeadPresets();
+
+  // テーマトグルアイコンを初期化
+  updateThemeToggleIcon(document.documentElement.dataset.theme);
 });
 
 function bindEvents() {
+  // テーマ切替
+  document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
   // 設定パネル
   document.getElementById('settingsPanelToggle').addEventListener('click', toggleSettingsPanel);
   document.getElementById('settingsGear').addEventListener('click', toggleSettingsPanel);
@@ -785,6 +801,35 @@ async function toggleMode() {
   } finally {
     modeButtons.forEach(btn => { if (btn) btn.disabled = false; });
   }
+}
+
+// ========== テーマ切替 ==========
+function toggleTheme() {
+  const html = document.documentElement;
+  const newTheme = html.dataset.theme === 'dark' ? 'light' : 'dark';
+
+  document.body.classList.add('theme-transitioning');
+  html.dataset.theme = newTheme;
+  localStorage.setItem('aibo_theme', newTheme);
+
+  // theme-color meta を更新
+  const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+  if (metaThemeColor) {
+    metaThemeColor.content = newTheme === 'dark' ? '#231917' : '#FFF8F5';
+  }
+
+  // トグルボタンのアイコンを更新
+  updateThemeToggleIcon(newTheme);
+
+  setTimeout(() => {
+    document.body.classList.remove('theme-transitioning');
+  }, 350);
+}
+
+function updateThemeToggleIcon(theme) {
+  const icon = theme === 'dark' ? '☀️' : '🌙';
+  const btn = document.getElementById('themeToggle');
+  if (btn) btn.textContent = icon;
 }
 
 function showStatus(type, message, targetId = 'actionStatus') {
