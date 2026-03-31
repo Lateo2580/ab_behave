@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; connect-src 'self' https://public.api.aibo.com; img-src 'self'; font-src 'self' https://fonts.gstatic.com;">
   <meta name="referrer" content="no-referrer">
   <meta name="theme-color" content="#FFF8F5">
@@ -34,6 +34,7 @@
               <span class="status-chip-icon" id="sleepyChipIcon">😪</span>
               <span class="status-chip-label" id="sleepyChipLabel">--</span>
             </button>
+            <button class="theme-toggle" id="themeToggle" aria-label="テーマ切替">🌙</button>
             <button class="settings-gear" id="settingsGear" aria-label="設定を開く">⚙️</button>
           </div>
         </div>
@@ -61,7 +62,7 @@
       <!-- 設定パネル（PC: サイドバー下部 / モバイル: ヘッダー下にスライドダウン） -->
       <div class="sidebar-bottom">
         <div class="settings-panel" id="settingsPanel">
-          <div class="settings-panel-header" id="settingsPanelToggle">
+          <div class="settings-panel-header" id="settingsPanelToggle" role="button" tabindex="0" aria-expanded="false" aria-controls="settingsPanelContent">
             <span>⚙️ 設定</span>
             <span class="settings-arrow" id="settingsPanelArrow">▲</span>
             <span class="settings-panel-summary" id="settingsSummary"></span>
@@ -74,6 +75,14 @@
             <div class="button-row">
               <button class="btn btn-primary" id="saveTokenBtn">保存</button>
               <button class="btn btn-secondary" id="fetchDevicesBtn">接続テスト</button>
+            </div>
+            <div class="font-size-group">
+              <label>文字サイズ</label>
+              <div class="font-size-segments" role="group" aria-label="文字サイズ選択">
+                <button class="font-size-seg" data-size="normal" aria-pressed="true" style="font-size:0.8rem;">A</button>
+                <button class="font-size-seg" data-size="large" aria-pressed="false" style="font-size:1rem;">A</button>
+                <button class="font-size-seg" data-size="xlarge" aria-pressed="false" style="font-size:1.2rem;">A</button>
+              </div>
             </div>
             <div class="device-info" id="deviceInfo" style="display:none;">
               <strong>接続中:</strong><br>
@@ -98,6 +107,12 @@
         <button class="mode-btn standby mobile-mode-btn" id="modeBtnMobile">
           ⏸️ 指示待ちにする
         </button>
+
+        <!-- 最近使った操作 -->
+        <div class="recent-actions hidden" id="recentActions">
+          <div class="category-list-label">最近使った操作</div>
+          <div class="recent-actions-scroll" id="recentActionsScroll"></div>
+        </div>
 
         <!-- クイックアクションバー -->
         <div class="quick-actions">
@@ -124,7 +139,7 @@
 
         <!-- 🐾 姿勢を変える -->
         <div class="category-card" id="categoryPosture">
-          <div class="category-header" data-category="posture">
+          <div class="category-header" data-category="posture" role="button" tabindex="0" aria-expanded="false" aria-controls="categoryPostureContent">
             <span class="category-title">🐾 姿勢を変える</span>
             <span class="category-count">10種類</span>
             <span class="category-arrow">▼</span>
@@ -169,7 +184,7 @@
 
         <!-- 🎮 ふるまい -->
         <div class="category-card" id="categoryMotion">
-          <div class="category-header" data-category="motion">
+          <div class="category-header" data-category="motion" role="button" tabindex="0" aria-expanded="false" aria-controls="categoryMotionContent">
             <span class="category-title">🎮 ふるまい</span>
             <span class="category-count">7カテゴリ</span>
             <span class="category-arrow">▼</span>
@@ -183,7 +198,7 @@
 
         <!-- 🎪 トリック -->
         <div class="category-card" id="categoryTrick">
-          <div class="category-header" data-category="trick">
+          <div class="category-header" data-category="trick" role="button" tabindex="0" aria-expanded="false" aria-controls="categoryTrickContent">
             <span class="category-title">🎪 トリック</span>
             <span class="category-count">7種類</span>
             <span class="category-arrow">▼</span>
@@ -198,7 +213,7 @@
 
         <!-- 🐕 首を動かす -->
         <div class="category-card" id="categoryMoveHead">
-          <div class="category-header" data-category="moveHead">
+          <div class="category-header" data-category="moveHead" role="button" tabindex="0" aria-expanded="false" aria-controls="categoryMoveHeadContent">
             <span class="category-title">🐕 首を動かす</span>
             <span class="category-count">5+カスタム</span>
             <span class="category-arrow">▼</span>
@@ -206,7 +221,7 @@
           <div class="category-content" id="categoryMoveHeadContent">
             <div class="category-content-inner">
               <div class="action-grid" id="moveHeadPresetGrid"></div>
-              <div class="move-head-custom-toggle" id="moveHeadCustomToggle">
+              <div class="move-head-custom-toggle" id="moveHeadCustomToggle" role="button" tabindex="0" aria-expanded="false" aria-controls="moveHeadCustom">
               <span>カスタム設定</span>
               <span id="moveHeadCustomArrow">▼</span>
             </div>
@@ -230,7 +245,7 @@
         </div>
 
         <!-- ステータスメッセージ -->
-        <div class="status" id="actionStatus"></div>
+        <div class="status" id="actionStatus" role="status" aria-live="polite" aria-atomic="true"></div>
       </div>
     </main>
   </div>
