@@ -275,16 +275,22 @@ function buildMotionAccordion() {
 
     const header = document.createElement('div');
     header.className = 'accordion-header';
+    header.setAttribute('role', 'button');
+    header.setAttribute('tabindex', '0');
+    header.setAttribute('aria-expanded', 'false');
     header.innerHTML = `<span>${group.label}</span><span class="accordion-arrow">▼</span>`;
-    header.addEventListener('click', () => {
-      const content = section.querySelector('.accordion-content');
-      const arrow = header.querySelector('.accordion-arrow');
-      const isOpen = content.classList.toggle('open');
-      arrow.textContent = isOpen ? '▲' : '▼';
-    });
 
     const content = document.createElement('div');
     content.className = 'accordion-content';
+    content.id = `accordion-${group.id}`;
+    header.setAttribute('aria-controls', content.id);
+
+    header.addEventListener('click', () => {
+      const arrow = header.querySelector('.accordion-arrow');
+      const isOpen = content.classList.toggle('open');
+      arrow.textContent = isOpen ? '▲' : '▼';
+      header.setAttribute('aria-expanded', String(isOpen));
+    });
 
     const grid = document.createElement('div');
     grid.className = 'action-grid';
@@ -388,8 +394,10 @@ function bindEvents() {
   document.getElementById('moveHeadCustomToggle').addEventListener('click', () => {
     const content = document.getElementById('moveHeadCustom');
     const arrow = document.getElementById('moveHeadCustomArrow');
+    const toggle = document.getElementById('moveHeadCustomToggle');
     const isOpen = content.classList.toggle('open');
     arrow.textContent = isOpen ? '▲' : '▼';
+    toggle.setAttribute('aria-expanded', String(isOpen));
   });
 
   document.getElementById('azimuthSlider').addEventListener('input', (e) => {
@@ -407,6 +415,16 @@ function bindEvents() {
     const elevation = parseFloat(document.getElementById('elevationSlider').value);
     const velocity = parseFloat(document.getElementById('velocitySlider').value);
     executeMoveHead(azimuth, elevation, velocity);
+  });
+
+  // キーボードナビゲーション: Enter/Space で role="button" 要素をクリック
+  document.querySelectorAll('[role="button"][tabindex="0"]').forEach(el => {
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        el.click();
+      }
+    });
   });
 }
 
@@ -462,8 +480,10 @@ function updateUI() {
   // 未設定時は設定パネルを自動展開
   if (!isReady) {
     const content = document.getElementById('settingsPanelContent');
+    const toggle = document.getElementById('settingsPanelToggle');
     if (!content.classList.contains('show')) {
       content.classList.add('show');
+      toggle.setAttribute('aria-expanded', 'true');
     }
   }
 }
@@ -472,8 +492,10 @@ function updateUI() {
 function toggleSettingsPanel() {
   const content = document.getElementById('settingsPanelContent');
   const arrow = document.getElementById('settingsPanelArrow');
+  const toggle = document.getElementById('settingsPanelToggle');
   const isShow = content.classList.toggle('show');
   arrow.textContent = isShow ? '▼' : '▲';
+  toggle.setAttribute('aria-expanded', String(isShow));
 }
 
 async function saveToken() {
@@ -558,7 +580,8 @@ function bindCategoryToggle() {
   document.querySelectorAll('.category-header').forEach(header => {
     header.addEventListener('click', () => {
       const card = header.closest('.category-card');
-      card.classList.toggle('open');
+      const isOpen = card.classList.toggle('open');
+      header.setAttribute('aria-expanded', String(isOpen));
     });
   });
 }
