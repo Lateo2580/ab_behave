@@ -433,7 +433,14 @@ body.theme-transitioning * {
               box-shadow var(--md-duration-short) var(--md-ease-standard);
 }
 
-.input-group input:focus {
+.input-group input:focus-visible {
+  outline: 2px solid var(--md-primary);
+  outline-offset: 2px;
+  border-color: var(--md-primary);
+  box-shadow: 0 0 0 1px var(--md-primary);
+}
+
+.input-group input:focus:not(:focus-visible) {
   outline: none;
   border-color: var(--md-primary);
   box-shadow: 0 0 0 1px var(--md-primary);
@@ -1082,6 +1089,80 @@ body.theme-transitioning * {
 ::selection {
   background: var(--md-primary-container);
   color: var(--md-on-primary-container);
+}
+
+/* ========== Focus Visible ========== */
+.btn:focus-visible,
+.action-btn:focus-visible,
+.mode-btn:focus-visible,
+.status-chip:focus-visible,
+.settings-gear:focus-visible,
+.theme-toggle:focus-visible,
+.category-header:focus-visible,
+.accordion-header:focus-visible,
+.move-head-custom-toggle:focus-visible,
+.quick-action-btn:focus-visible,
+.font-size-seg:focus-visible {
+  outline: 2px solid var(--md-primary);
+  outline-offset: 2px;
+}
+
+.btn:focus:not(:focus-visible),
+.action-btn:focus:not(:focus-visible),
+.mode-btn:focus:not(:focus-visible),
+.status-chip:focus:not(:focus-visible),
+.settings-gear:focus:not(:focus-visible),
+.theme-toggle:focus:not(:focus-visible),
+.category-header:focus:not(:focus-visible),
+.accordion-header:focus:not(:focus-visible),
+.move-head-custom-toggle:focus:not(:focus-visible),
+.quick-action-btn:focus:not(:focus-visible),
+.font-size-seg:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ========== Recent Actions ========== */
+.recent-actions {
+  margin-bottom: 12px;
+}
+
+.recent-actions-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.recent-actions-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.recent-action-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--md-shape-full);
+  background: var(--md-surface-container-high);
+  color: var(--md-on-surface);
+  border: none;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: transform var(--md-duration-short) var(--md-ease-spring),
+              background var(--md-duration-short) var(--md-ease-standard);
+}
+
+.recent-action-chip:active {
+  transform: scale(0.93);
+}
+
+.recent-action-chip .chip-emoji {
+  font-size: 1.1rem;
 }
 
 /* ========== 9. Responsive Media Queries ========== */
