@@ -103,6 +103,10 @@
   --md-elevation-3: color-mix(in srgb, var(--md-primary) 11%, var(--md-surface));
 }
 
+/* Font size scaling */
+[data-font-size="large"] { font-size: 18px; }
+[data-font-size="xlarge"] { font-size: 20px; }
+
 /* ========== 1. Reset & Base ========== */
 * {
   box-sizing: border-box;
@@ -341,6 +345,54 @@ body.theme-transitioning * {
   animation: slideDown var(--md-duration-medium) var(--md-ease-emphasized);
 }
 
+/* Font size segment control */
+.font-size-group {
+  margin-top: 16px;
+}
+
+.font-size-group label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--md-on-surface-variant);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.font-size-segments {
+  display: flex;
+  border-radius: var(--md-shape-full);
+  overflow: hidden;
+  border: 2px solid var(--md-outline-variant);
+}
+
+.font-size-seg {
+  flex: 1;
+  padding: 10px 0;
+  border: none;
+  background: var(--md-surface-container);
+  color: var(--md-on-surface);
+  font-family: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background var(--md-duration-short) var(--md-ease-standard),
+              color var(--md-duration-short) var(--md-ease-standard);
+}
+
+.font-size-seg:not(:last-child) {
+  border-right: 1px solid var(--md-outline-variant);
+}
+
+.font-size-seg[aria-pressed="true"] {
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+}
+
+.font-size-seg:active {
+  transform: scale(0.97);
+}
+
 @keyframes slideDown {
   from {
     opacity: 0;
@@ -371,7 +423,7 @@ body.theme-transitioning * {
 .input-group input {
   width: 100%;
   padding: 14px 16px;
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-family: inherit;
   border: 2px solid var(--md-outline-variant);
   border-radius: var(--md-shape-md);
@@ -396,7 +448,7 @@ body.theme-transitioning * {
   align-items: center;
   justify-content: center;
   padding: 12px 24px;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 700;
   font-family: inherit;
   letter-spacing: 0.02em;
@@ -467,7 +519,7 @@ body.theme-transitioning * {
   background: var(--md-surface-container);
   padding: 14px 16px;
   border-radius: var(--md-shape-md);
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--md-on-surface-variant);
   margin-top: 12px;
   border: 1px solid var(--md-outline-variant);
@@ -511,7 +563,7 @@ body.theme-transitioning * {
 .mode-btn {
   width: 100%;
   padding: 16px;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 700;
   font-family: inherit;
   letter-spacing: 0.02em;
@@ -704,8 +756,8 @@ body.theme-transitioning * {
   border: none;
   border-radius: var(--md-shape-xl);
   padding: 18px 12px;
-  min-height: 90px;
-  font-size: 12px;
+  min-height: 5.625rem;
+  font-size: 0.75rem;
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
@@ -940,7 +992,7 @@ body.theme-transitioning * {
   padding: 12px 16px;
   border-radius: var(--md-shape-full);
   margin-top: 14px;
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 700;
   display: none;
   animation: statusIn var(--md-duration-medium) var(--md-ease-spring);
