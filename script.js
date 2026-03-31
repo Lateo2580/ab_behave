@@ -341,11 +341,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // テーマトグルアイコンを初期化
   updateThemeToggleIcon(document.documentElement.dataset.theme);
+
+  // 文字サイズセグメントを初期化
+  updateFontSizeSegments(document.documentElement.dataset.fontSize || 'normal');
 });
 
 function bindEvents() {
   // テーマ切替
   document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+  // 文字サイズ切替
+  document.querySelectorAll('.font-size-seg').forEach(btn => {
+    btn.addEventListener('click', () => setFontSize(btn.dataset.size));
+  });
 
   // 設定パネル
   document.getElementById('settingsPanelToggle').addEventListener('click', toggleSettingsPanel);
@@ -830,6 +838,19 @@ function updateThemeToggleIcon(theme) {
   const icon = theme === 'dark' ? '☀️' : '🌙';
   const btn = document.getElementById('themeToggle');
   if (btn) btn.textContent = icon;
+}
+
+// ========== 文字サイズ切替 ==========
+function setFontSize(size) {
+  document.documentElement.dataset.fontSize = size;
+  localStorage.setItem('aibo_font_size', size);
+  updateFontSizeSegments(size);
+}
+
+function updateFontSizeSegments(activeSize) {
+  document.querySelectorAll('.font-size-seg').forEach(btn => {
+    btn.setAttribute('aria-pressed', btn.dataset.size === activeSize ? 'true' : 'false');
+  });
 }
 
 function showStatus(type, message, targetId = 'actionStatus') {
