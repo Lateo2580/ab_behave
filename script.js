@@ -356,8 +356,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 function bindEvents() {
-  // テーマ切替
+  // テーマ切替（モバイル + PC）
   document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+  document.getElementById('themeToggleDesktop').addEventListener('click', toggleTheme);
 
   // 文字サイズ切替
   document.querySelectorAll('.font-size-seg').forEach(btn => {
@@ -877,7 +878,9 @@ function toggleTheme() {
 function updateThemeToggleIcon(theme) {
   const icon = theme === 'dark' ? '☀️' : '🌙';
   const btn = document.getElementById('themeToggle');
+  const btnDesktop = document.getElementById('themeToggleDesktop');
   if (btn) btn.textContent = icon;
+  if (btnDesktop) btnDesktop.textContent = icon;
 }
 
 // ========== 文字サイズ切替 ==========
