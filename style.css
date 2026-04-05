@@ -512,6 +512,15 @@ body.theme-transitioning * {
   background: var(--md-surface-container-highest);
 }
 
+.btn-danger {
+  background: var(--md-error, #b3261e);
+  color: var(--md-on-error, #fff);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--md-error, #b3261e) 85%, black);
+}
+
 .button-row {
   display: flex;
   gap: 10px;
@@ -995,29 +1004,29 @@ body.theme-transitioning * {
 
 /* Status messages */
 .status {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-120%);
+  z-index: 9999;
   text-align: center;
-  padding: 12px 16px;
+  padding: 12px 24px;
   border-radius: var(--md-shape-full);
-  margin-top: 14px;
   font-size: 0.8125rem;
   font-weight: 700;
   display: none;
-  animation: statusIn var(--md-duration-medium) var(--md-ease-spring);
-}
-
-@keyframes statusIn {
-  from {
-    opacity: 0;
-    transform: translateY(4px) scale(0.97);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-width: calc(100vw - 32px);
+  pointer-events: none;
+  transition: transform var(--md-duration-medium) var(--md-ease-spring),
+              opacity var(--md-duration-medium) var(--md-ease-spring);
+  opacity: 0;
 }
 
 .status.show {
   display: block;
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
 }
 
 .status.success {

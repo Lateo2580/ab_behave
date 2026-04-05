@@ -182,6 +182,15 @@ const MOVE_HEAD_PRESETS = [
   { name: '下を見る', azimuth: 0, elevation: -30, velocity: 40 },
 ];
 
+// ========== API レスポンスチェック ==========
+function checkApiResponse(response) {
+  if (response.status === 401) {
+    showStatus('error', 'トークンが期限切れまたは無効です。設定からトークンを削除して再登録してください。', 'actionStatus');
+    return false;
+  }
+  return true;
+}
+
 // ========== 状態管理 ==========
 let currentToken = '';
 let currentDeviceId = '';
@@ -369,7 +378,7 @@ function bindEvents() {
   document.getElementById('settingsPanelToggle').addEventListener('click', toggleSettingsPanel);
   document.getElementById('settingsGear').addEventListener('click', toggleSettingsPanel);
   document.getElementById('saveTokenBtn').addEventListener('click', saveToken);
-  document.getElementById('fetchDevicesBtn').addEventListener('click', fetchDevices);
+  document.getElementById('deleteTokenBtn').addEventListener('click', deleteToken);
 
   // ステータスチップ（モバイル + PC）
   document.getElementById('hungryChip').addEventListener('click', chipCheckHungry);
@@ -514,33 +523,92 @@ async function saveToken() {
     return;
   }
 
-  currentToken = token;
+  const btn = document.getElementById('saveTokenBtn');
+  btn.disabled = true;
+  btn.textContent = '接続確認中…';
 
-  // AES-GCM で暗号化して保存
+  // 保存前に接続テストを実施
   try {
-    const encrypted = await encryptToken(token);
-    localStorage.setItem(STORAGE_KEY_TOKEN, encrypted.data);
-    localStorage.setItem(STORAGE_KEY_TOKEN_IV, encrypted.iv);
-  } catch {
-    showStatus('error', '暗号化に失敗しました。ブラウザが Web Crypto API に対応しているか確認してください。', 'actionStatus');
+    const response = await fetch(`${API_BASE}/devices`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        showStatus('error', 'トークンが無効です。正しいトークンを入力してください。', 'actionStatus');
+      } else {
+        const error = await response.json().catch(() => ({}));
+        showStatus('error', `接続エラー: ${error.message || 'HTTP ' + response.status}`, 'actionStatus');
+      }
+      return;
+    }
+
+    const data = await response.json();
+
+    if (!data.devices || data.devices.length === 0) {
+      showStatus('error', 'aiboが見つかりませんでした。トークンを確認してください。', 'actionStatus');
+      return;
+    }
+
+    // 接続成功 → トークンを暗号化して保存
+    try {
+      const encrypted = await encryptToken(token);
+      localStorage.setItem(STORAGE_KEY_TOKEN, encrypted.data);
+      localStorage.setItem(STORAGE_KEY_TOKEN_IV, encrypted.iv);
+    } catch {
+      showStatus('error', '暗号化に失敗しました。ブラウザが Web Crypto API に対応しているか確認してください。', 'actionStatus');
+      return;
+    }
+
+    currentToken = token;
+
+    // デバイス情報を保存
+    const device = data.devices[0];
+    currentDeviceId = device.deviceId;
+    currentDeviceName = device.nickname || 'aibo';
+    localStorage.setItem(STORAGE_KEY_DEVICE, currentDeviceId);
+    localStorage.setItem(STORAGE_KEY_DEVICE_NAME, currentDeviceName);
+
+    // 保存後はマスク表示に戻す
+    input.value = '********';
+    input.dataset.hasToken = 'true';
+
+    updateUI();
+    showStatus('success', `${currentDeviceName} と接続しました！トークンを保存しました。`, 'actionStatus');
+    setTimeout(() => {
+      document.getElementById('actionStatus').classList.remove('show');
+    }, 3000);
+
+  } catch (error) {
+    showStatus('error', `接続エラー: ${error.message}`, 'actionStatus');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '保存';
+  }
+}
+
+async function deleteToken() {
+  if (!confirm('トークンを削除しますか？\naibo との接続が解除されます。')) {
     return;
   }
 
-  // トークン変更時はデバイス情報をクリア
+  // トークンと関連データを全削除
+  currentToken = '';
   currentDeviceId = '';
   currentDeviceName = '';
+  localStorage.removeItem(STORAGE_KEY_TOKEN);
+  localStorage.removeItem(STORAGE_KEY_TOKEN_IV);
   localStorage.removeItem(STORAGE_KEY_DEVICE);
   localStorage.removeItem(STORAGE_KEY_DEVICE_NAME);
 
-  // 保存後はマスク表示に戻す
-  input.value = '********';
-  input.dataset.hasToken = 'true';
+  document.getElementById('tokenInput').value = '';
+  document.getElementById('tokenInput').dataset.hasToken = 'false';
 
   updateUI();
-  showStatus('success', 'トークンを保存しました。「接続テスト」を押してaiboと接続してください。', 'actionStatus');
+  showStatus('success', 'トークンを削除しました。', 'actionStatus');
   setTimeout(() => {
     document.getElementById('actionStatus').classList.remove('show');
-  }, 5000);
+  }, 3000);
 }
 
 async function fetchDevices() {
@@ -555,6 +623,7 @@ async function fetchDevices() {
     });
 
     if (!response.ok) {
+      if (!checkApiResponse(response)) return;
       const error = await response.json();
       throw new Error(error.message || `HTTP ${response.status}`);
     }
@@ -634,6 +703,7 @@ async function executeMotion(category, mode, displayName) {
     });
 
     if (!response.ok) {
+      if (!checkApiResponse(response)) return;
       const error = await response.json();
       throw new Error(error.message || `HTTP ${response.status}`);
     }
@@ -672,6 +742,7 @@ async function executeTrick(trickName, displayName) {
     });
 
     if (!response.ok) {
+      if (!checkApiResponse(response)) return;
       const error = await response.json();
       throw new Error(error.message || `HTTP ${response.status}`);
     }
@@ -713,6 +784,7 @@ async function executeMoveHead(azimuth, elevation, velocity) {
     });
 
     if (!response.ok) {
+      if (!checkApiResponse(response)) return;
       const error = await response.json();
       throw new Error(error.message || `HTTP ${response.status}`);
     }
@@ -771,6 +843,7 @@ async function executePosture(postureKey) {
     });
 
     if (!response.ok) {
+      if (!checkApiResponse(response)) return;
       const error = await response.json();
       throw new Error(error.message || `HTTP ${response.status}`);
     }
@@ -833,6 +906,7 @@ async function toggleMode() {
     });
 
     if (!response.ok) {
+      if (!checkApiResponse(response)) return;
       const error = await response.json();
       throw new Error(error.message || `HTTP ${response.status}`);
     }
@@ -1020,6 +1094,7 @@ async function chipCheckHungry() {
     });
 
     if (!execResponse.ok) {
+      if (!checkApiResponse(execResponse)) return;
       const error = await execResponse.json();
       throw new Error(error.message || `HTTP ${execResponse.status}`);
     }
@@ -1073,6 +1148,7 @@ async function chipCheckSleepy() {
     });
 
     if (!execResponse.ok) {
+      if (!checkApiResponse(execResponse)) return;
       const error = await execResponse.json();
       throw new Error(error.message || `HTTP ${execResponse.status}`);
     }
@@ -1102,6 +1178,7 @@ async function pollExecution(executionId, maxRetries = 10, interval = 1000) {
     });
 
     if (!response.ok) {
+      if (!checkApiResponse(response)) return null;
       const error = await response.json();
       throw new Error(error.message || `HTTP ${response.status}`);
     }

@@ -75,7 +75,7 @@
             </div>
             <div class="button-row">
               <button class="btn btn-primary" id="saveTokenBtn">保存</button>
-              <button class="btn btn-secondary" id="fetchDevicesBtn">接続テスト</button>
+              <button class="btn btn-danger" id="deleteTokenBtn">トークン削除</button>
             </div>
             <div class="font-size-group">
               <label>文字サイズ</label>
@@ -97,7 +97,7 @@
     <!-- === メインコンテンツ === -->
     <main class="main-content" id="mainContent">
       <!-- 未設定時の表示 -->
-      <div class="setup-required" id="setupRequired">
+      <div class="setup-required hidden" id="setupRequired">
         <div class="setup-required-emoji">🔧</div>
         <p>設定を開いて、<br>アクセストークンを入力してください。</p>
       </div>
@@ -245,11 +245,12 @@
           </div>
         </div>
 
-        <!-- ステータスメッセージ -->
-        <div class="status" id="actionStatus" role="status" aria-live="polite" aria-atomic="true"></div>
       </div>
     </main>
   </div>
+
+  <!-- ステータスメッセージ（トースト通知） -->
+  <div class="status" id="actionStatus" role="status" aria-live="polite" aria-atomic="true"></div>
 
   <script src="script.js"></script>
 </body>
